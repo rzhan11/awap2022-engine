@@ -1,42 +1,47 @@
 '''
 Game
-
+todo: add checks for connections
+todo: basic viewer
 '''
 
 import random
 import string
 import math
+import json
+
 from structure import *
 from player import *
-from constants import Constants
-import json
+from game_constants import GameConstants as GC
 from custom_json import CustomEncoder
 
+
+'''
+Class containing information about a single tile
+
+Fields:
+-----
+x - x position of this tile
+y - y position of this tile
+population - population of this tile
+
+'''
 class Tile:
-    def __init__(self, x, y, population, structures):
+    def __init__(self, x, y, population, structure):
         self.x = x
         self.y = y
         self.population = population
-        self.structures = []
+        self.structure = structure
         self.has_preserve = False
-        for s in structures:
-            self._build(s)
 
     def _copy(self):
-        return Tile(self.x, self.y, self.population, [s._copy() for s in self.structures])
+        return Tile(self.x, self.y, self.population, Structure.make_copy(self.structure))
 
-    def _build(self, s):
-        self.structures += [s]
-        if s.type == StructureType.PRESERVE:
-            self.has_preserve = True
+'''
+Contains many useful functions for map operations
+- symmetry operations
+-
 
-    def _has_same_team_building(self, s):
-        for s2 in self.structures:
-            if s.team == s2.team:
-                return True
-        return False
-
-
+'''
 class MapUtil:
 
     @classmethod
@@ -51,6 +56,10 @@ class MapUtil:
     def rot_sym(self, x, y, width, height):
         return (width - 1 - x, height - 1 - y)
 
+
+    '''
+    Returns a list of tuples containing all of the (dx, dy) pairs within rad2 distance
+    '''
     def get_diffs(rad2):
         max_rad = int(math.sqrt(rad2))
         diffs = []
@@ -60,18 +69,34 @@ class MapUtil:
                     diffs += [(di, dj)]
         return diffs
 
+    '''
+    Returns the r^2 distance between (x1, y1) and (x2, y2)
+    '''
     def dist(x1, y1, x2, y2):
         dx = x1 - x2
         dy = y1 - y2
         return dx * dx + dy * dy
 
 
+'''
+Contains all the necessary info to make a unique map
+seed - seed number used for random generation
+width - width of the map
+height - height of the map
+sym - type of symmetry (x, y, rotational)
+num_generators - number of initial generators for each team
+num_cities - number of cities
+num_preserves - number of preserves (tiles that cannot be built on)
+
+TODO: Add a field for paths for custom maps
+'''
 class MapInfo():
-    def __init__(self, seed, width, height, sym=MapUtil.x_sym, num_cities=10, num_preserves=10):
+    def __init__(self, seed, width, height, sym=MapUtil.x_sym, num_generators=1, num_cities=10, num_preserves=10):
         self.seed = seed
         self.width = width
         self.height = height
         self.sym = sym
+        self.num_generators = num_generators
         self.num_cities = num_cities
         self.num_preserves = num_preserves
 
@@ -86,18 +111,39 @@ def import_file(module_name, file_path):
 
 
 '''
-maps are 32x32 to 64x64
+LOL IDK WHAT THIS COMMENT IS SUPPOSED TO DO... (TODO)
+Maps are 32x32 to 64x64
 Ensures that maps are symmetric (vertical/horizontal/rotational)
 Currently just does horizontal symmetry
 '''
 
+'''
+Game details:
+p1 is RED
+p2 is BLUE
+'''
 class Game:
 
+
+    '''
+    Initializes the game state:
+    -----
+    1. Loads players from given paths
+    2. Creates map based on 'map_info' specification
+        - Creates extra structures for optimization
+    3. Initializes data structures storing frame information for replays
+
+
+    '''
     def __init__(self, p1_path, p2_path, map_info):
+        self.p1_name = p1_path
+        self.p2_name = p2_path
+
         self.init_map(map_info)
         self.map_neighbors = self.init_neighbors()
+        # map from populated tile (x, y) to all towers that can reach it
         self.populated_tiles = {loc: [] for loc in self.get_populated_tiles()}
-        self.tower_diffs = MapUtil.get_diffs(Constants.TOWER_RADIUS)
+        self.tower_diffs = MapUtil.get_diffs(GC.TOWER_RADIUS)
 
         self.MyPlayer1 = import_file("Player1", p1_path).MyPlayer
         self.MyPlayer2 = import_file("Player2", p2_path).MyPlayer
@@ -111,54 +157,98 @@ class Game:
         self.money_history = []
         self.utility_history = []
 
+    '''
+    Creates the initial map based on map_info
+    -----
+    1. Creates all tiles for the map
+    2. Assigns population to map (while maintaining symmetry)
+    3. Creates preserves (with symmetry)
+    4. Creates generators (with symmetry)
+    5. Creates 'simple_map' (used in replays)
+    '''
     def init_map(self, map_info):
         random.seed(map_info.seed)
 
+        self.map_name = f"random-{map_info.seed}"
         self.width = map_info.width
         self.height = map_info.height
 
-        assert(Constants.MIN_WIDTH <= self.width <= Constants.MAX_WIDTH)
-        assert(Constants.MIN_HEIGHT <= self.height <= Constants.MAX_HEIGHT)
+        assert(GC.MIN_WIDTH <= self.width <= GC.MAX_WIDTH)
+        assert(GC.MIN_HEIGHT <= self.height <= GC.MAX_HEIGHT)
 
-        self.map = [[Tile(i, j, 0, []) for j in range(self.height)] for i in range(self.width)]
+        self.map = [[Tile(i, j, 0, None) for j in range(self.height)] for i in range(self.width)]
 
+        # adds cities (tiles with population)
         for i in range(map_info.num_cities):
             x, y = random.randint(0, self.width - 1), random.randint(0, self.height - 1)
             x2, y2 = map_info.sym(x, y, self.width, self.height)
-            pop = random.randrange(Constants.CITY_MIN_POP, Constants.CITY_MAX_POP)
-            # todo: add neutral structures here
+            pop = random.randrange(GC.CITY_MIN_POP, GC.CITY_MAX_POP)
             self.map[x][y].population = pop
             self.map[x2][y2].population = pop
 
+        # adds
         for i in range(map_info.num_preserves):
             x, y = random.randint(0, self.width - 1), random.randint(0, self.height - 1)
             x2, y2 = map_info.sym(x, y, self.width, self.height)
-            # todo: add neutral structures here
-            self.map[x][y]._build(Structure(StructureType.PRESERVE, x, y, Team.NEUTRAL))
-            self.map[x2][y2]._build(Structure(StructureType.PRESERVE, x2, y2, Team.NEUTRAL))
+            self.map[x][y].structure = Structure(StructureType.PRESERVE, x, y, Team.NEUTRAL)
+            self.map[x2][y2].structure = Structure(StructureType.PRESERVE, x2, y2, Team.NEUTRAL)
 
-        self.simple_map = [[[tile.population, tile.structures] for tile in col] for col in self.map]
+        # adds generators (and maintains 'generators' structure)
+        self.generators = [[], []]
+        for i in range(map_info.num_generators):
+            x, y = random.randint(0, self.width - 1), random.randint(0, self.height - 1)
+            x2, y2 = map_info.sym(x, y, self.width, self.height)
+            pop = random.randrange(GC.CITY_MIN_POP, GC.CITY_MAX_POP)
+            self.map[x][y].structure = Structure(StructureType.GENERATOR, x, y, Team.RED)
+            self.map[x2][y2].structure = Structure(StructureType.GENERATOR, x, y, Team.BLUE)
+            self.generators[0] += [(x, y)]
+            self.generators[1] += [(x2, y2)]
+
+        self.simple_map = [[[tile.population, Structure.make_copy(tile.structure)] for tile in col] for col in self.map]
 
 
-
+    '''
+    Returns whether (i, j) is contained in the map
+    '''
     def in_bounds(self, i, j):
         return 0 <= i < self.width and 0 <= j < self.height
 
+    '''
+    Initialies a matrix of neighbors for each tile
+    - Used in optimizing game simulation (when running BFS)
+    '''
     def init_neighbors(self):
         neighbors = [[[] for j in range(self.height)] for i in range(self.width)]
 
         for i in range(self.width):
             for j in range(self.height):
-                for di, dj in Constants.MOVE_DIRS:
+                for di, dj in GC.MOVE_DIRS:
                     ni, nj = i + di, j + dj
                     if self.in_bounds(ni, nj):
                         neighbors[i][j] += [(ni, nj)]
 
         return neighbors
 
+
+    def is_team_present(self, x, y, team):
+        s = self.map[x][y].structure
+        return s is not None and s.team == team
+
+    def get_team_present(self, x, y):
+        s = self.map[x][y].structure
+        if s is None:
+            return None
+        return s.team
+
+    '''
+    Returns a deep copy of the current map state
+    '''
     def map_copy(self):
         return [[self.map[i][j]._copy() for j in range(self.height)] for i in range(self.width)]
 
+    '''
+    Returns a list of tiles that have a non-zero population
+    '''
     def get_populated_tiles(self):
         tiles = []
         for i in range(self.width):
@@ -167,11 +257,30 @@ class Game:
                     tiles += [(i, j)]
         return tiles
 
+    '''
+    Runs the game
+    '''
     def play_game(self):
-        for turn_num in range(Constants.NUM_ROUNDS):
+        for turn_num in range(GC.NUM_ROUNDS):
             self.play_turn(turn_num)
 
+    '''
+    Runs a single turn of the game
+    ---
+    1. Checks which towers are connected to generators
+    1. Give each player resources
+    2. Gets build instructions from each player
+    3. Applies build instructions from each player
+    4. Saves relevant game info into replay data structures
+
+    -----
+    Important note: when giving data to players, make a copy before giving to players, so they do not modify the actual game state
+    '''
     def play_turn(self, turn_num):
+
+        # updates powered towers
+        self.update_tower_status()
+
         # update money, utility
         self.update_resources()
 
@@ -180,24 +289,64 @@ class Game:
         self.p2._to_build = []
 
         # get player turns
+        # TODO: penalize players taking excessive compute / kill extremely slow players
         self.p1.play_turn(turn_num, self.map_copy(), self.p1_state)
         self.p2.play_turn(turn_num, self.map_copy(), self.p2_state)
 
         # update game state based on player actions
-        p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
-        p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
+        if turn_num % 2 == 0: # alternate build priority (if two players try to build on the same tile)
+            p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
+            p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
+        else:
+            p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
+            p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
 
         self.frame_changes += [p1_changes + p2_changes]
         self.money_history += [(self.p1_state.money, self.p2_state.money)]
         self.utility_history += [(self.p1_state.utility, self.p2_state.utility)]
 
-    def update_resources(self):
-        self.p1_state.money += Constants.PLAYER_BASE_INCOME
-        self.p2_state.money += Constants.PLAYER_BASE_INCOME
+    '''
+    Updates which towers are powered
+    -----
+    Updates the matrix 'is_powered' to correctly reflect whether a given tile is powered by team t
+    is_powered[t][x][y] => "is (x, y) powered by team 't' "
+    '''
+    def update_tower_status(self):
+        self.is_powered = [[[False for j in range(self.height)] for i in range(self.width)] for ii in range(2)]
+        # run dfs from each generator
+        for ti, gens in enumerate(self.generators):
+            for gx, gy in gens:
+                t = self.get_team_present(gx, gy)
+                self.run_tower_dfs(gx, gy, self.is_powered[ti], t)
 
+    '''
+    Helper method for running dfs
+    '''
+    def run_tower_dfs(self, x, y, visited, cur_team):
+        visited[x][y] = True
+        for nx, ny in self.map_neighbors[x][y]:
+            if self.is_team_present(nx, ny, cur_team):
+                if not visited[nx][ny]:
+                    self.run_tower_dfs(x, y, visited, cur_team)
+
+
+    '''
+    Updates resources of players
+    -----
+    1. Gives each player base income
+    2. Gives players money/utility score based on tower income
+    '''
+    def update_resources(self):
+        self.p1_state.money += GC.PLAYER_BASE_INCOME
+        self.p2_state.money += GC.PLAYER_BASE_INCOME
+
+        # TODO: test alternative money systems
         for (x, y), towers in self.populated_tiles.items():
             tile = self.map[x][y]
             for tow in towers:
+                # skip tower if not powered
+                if not self.is_powered[tow.team][tow.x][tow.y]:
+                    continue
                 score = tile.population / len(tow)
                 if tow.team == Team.RED:
                     self.p1_state.money += score
@@ -206,6 +355,15 @@ class Game:
                     self.p1_state.money += score
                     self.p2_state.utility += score
 
+    '''
+    Attempts to build structure instructions for a given player/team
+    -----
+    1. Iterates through each build request
+        - checks if they can afford it and if the tile can be built on
+        - if valid, then adds structure to map and subtracts costs from player resources
+    -----
+    Returns a list of successful builds
+    '''
     def try_builds(self, builds, p_state, team):
         new_builds = []
         structures = [Structure(struct_type, x, y, team) for (struct_type, x, y) in builds]
@@ -213,8 +371,8 @@ class Game:
             # check if can build
             if self.can_build(s) and p_state.money >= s.type.get_cost():
                 p_state.money -= s.type.get_cost()
-                self.map[s.x][s.y]._build(s)
-                new_builds += [builds]
+                self.map[s.x][s.y].structure = s
+                new_builds += [s]
                 # add towers to populated tiles (for our updates on our side)
                 if s.type == StructureType.TOWER:
                     for (dx, dy) in self.tower_diffs:
@@ -231,23 +389,30 @@ class Game:
         if not self.in_bounds(s.x, s.y) or not s.type.get_can_build():
             return False
         # not blocked by preserve
-        t = self.map[s.x][s.y]
-        if t.has_preserve:
-            return False
-        # not blocked by other buildings
-        if t._has_same_team_building(s):
-            return False
-        return True
+        return self.map[s.x][s.y].structure is None
 
 
     def save_replay(self, save_dir):
         random.seed()
         id = random.randint(1e6, 1e7 - 1)
+
+        self.metadata = {
+            "p1_name": self.p1_name,
+            "p2_name": self.p2_name,
+            "map_name": self.map_name,
+            "num_frames": GC.NUM_ROUNDS,
+            "version": "1.0.0",
+        }
+
+        structure_type_ids = [(st.value.id, st.value.name) for st in StructureType]
+
         with open(f"{save_dir}/replay-{id}.awap22", "w") as f:
             obj = {
+                "metadata": self.metadata,
                 "map": self.simple_map,
                 "frame_changes": self.frame_changes,
                 "money_history": self.money_history,
-                "utility_history": self.utility_history
+                "utility_history": self.utility_history,
+                "structure_type_ids": structure_type_ids
             }
             json.dump(obj, f, cls=CustomEncoder)

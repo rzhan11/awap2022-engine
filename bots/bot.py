@@ -1,8 +1,11 @@
 import sys
 sys.path.insert(1, "../src")
 
+import random
+
 from player import *
-from constants import *
+from structure import *
+from game_constants import GameConstants as GC
 
 class MyPlayer(Player):
 
@@ -13,7 +16,13 @@ class MyPlayer(Player):
         return
 
     def play_turn(self, turn_num, map, my_info):
-        print("turn", self.turn, my_info)
-        self.build(StructureType.GENERATOR, 1, 1)
-        self.turn += 1
+        print("turn", turn_num, my_info)
+
+        width = len(map)
+        height = len(map[0])
+
+        x, y = random.randrange(0, width), random.randrange(0, height)
+        self.build(StructureType.ROAD, x, y)
+
+
         return

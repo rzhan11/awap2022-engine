@@ -1,6 +1,5 @@
 import json
 from structure import *
-from team import *
 import game
 from player import *
 

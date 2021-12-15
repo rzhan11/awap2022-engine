@@ -1,12 +1,19 @@
 from structure import *
-from team import *
-from constants import *
+from game_constants import GameConstants as GC
 
+from enum import Enum
 from abc import ABC, abstractmethod
+
+
+class Team(Enum):
+    NEUTRAL = -1
+    RED = 0
+    BLUE = 1
+
 
 class PlayerInfo:
 
-    def __init__(self, team, money=Constants.PLAYER_STARTING_MONEY, utility=0.0):
+    def __init__(self, team, money=GC.PLAYER_STARTING_MONEY, utility=0.0):
         self.team = team
         self.money = money
         self.utility = utility

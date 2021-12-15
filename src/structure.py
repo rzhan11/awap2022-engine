@@ -1,5 +1,5 @@
 from enum import Enum
-from team import *
+from player import *
 
 class StructureInfo:
     def __init__(self, id, name, cost, can_build):
@@ -8,7 +8,25 @@ class StructureInfo:
         self.cost = cost
         self.can_build = can_build
 
+'''
+Enum class for different structure types
+
+Fields
+-----
+id - id number of structure type
+name - string description of structure type
+cost - cost to build structure type
+can_build - flag for if the structure can be built by players
+
+Methods
+-----
+get_cost() - returns cost of structure type
+get_can_build() - returns if structure type can be built
+'''
+
+
 class StructureType(Enum):
+
     GENERATOR = StructureInfo(
             id=0,
             name="Generator",
@@ -47,21 +65,31 @@ class StructureType(Enum):
         return self.value.can_build
 
 
+'''
+Class containing information about a single structure
+
+Fields
+-----
+struct_type - the type of structure (StructureInfo class)
+
+'''
 class Structure:
-    def __init__(self, struct_type, x, y, team, powered=False):
+    @classmethod
+    def make_copy(self, s):
+        if s is None:
+            return None
+        return Structure(s.type, s.x, s.y, s.team)
+
+
+    def __init__(self, struct_type, x, y, team):
         self.x = x
         self.y = y
         self.team = team
         self.type = struct_type
 
     def __str__(self):
-        return f"[{self.type.name} {str(self.team)} {(self.x, self.y)}, P:{self.powered}]"
+        return f"[{self.type.name} {str(self.team)} {(self.x, self.y)}]"
 
-    def _copy(self):
-        return Structure(self.x, self.y, self.team, self.type)
-
-    def _equal(self, s):
-        return self.x == s.x and self.y == s.y and self.team == s.team and self.type == s.type
 
 #
 #

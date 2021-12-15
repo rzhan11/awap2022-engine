@@ -1,4 +1,5 @@
-class Constants:
+class GameConstants:
+
     MIN_WIDTH = 32
     MIN_HEIGHT = 32
     MAX_WIDTH = 64
