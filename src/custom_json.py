@@ -3,6 +3,9 @@ from structure import *
 import game
 from player import *
 
+'''
+Used for custom JSON encodings of our classes
+'''
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Team):
