@@ -17,16 +17,16 @@ class MyPlayer(Player):
 
 
 
-    def find_path(self, start, dest):
-        prev = {start: None}
-        q = [start]
+    def find_path(self, starts, dests, blocked_tiles):
+        prev = {s: None for s in starts}
+        q = list(starts)
         index = 0
         while index < len(q):
             state = q[index]
-            if state == dest:
+            if state in dests:
                 path = [state]
                 cur = state
-                while cur != start:
+                while cur not in starts:
                     cur = prev[cur]
                     path += [cur]
 
@@ -35,10 +35,14 @@ class MyPlayer(Player):
 
             for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
                 nx, ny = state[0] + dx, state[1] + dy
+                # in bounds and not already visited
                 if not (0 <= nx < self.width and 0 <= ny < self.height):
                     continue
                 if (nx, ny) in prev:
                     continue
+                if (nx, ny) in blocked_tiles:
+                    continue
+
                 prev[(nx, ny)] = state
                 q += [(nx, ny)]
 
@@ -51,7 +55,7 @@ class MyPlayer(Player):
     def play_turn(self, turn_num, map, my_info):
         print("turn", turn_num, my_info)
 
-        us = my_info.team
+        self.us = my_info.team
         self.width = len(map)
         self.height = len(map[0])
 
@@ -64,19 +68,29 @@ class MyPlayer(Player):
 
                 st = map[x][y].structure
                 if st is not None:
-                    if st.team == us and st.type == StructureType.GENERATOR:
+                    if st.team == self.us and st.type == StructureType.GENERATOR:
                         gens += [(x, y)]
 
-        if len(pops) > 0:
-            dest = pops[0]
-            path = self.find_path(gens[0], dest)
-            for loc in path:
-                if loc == dest:
+        my_tiles = set()
+        blocked_tiles = set()
+        for x in range(self.width):
+            for y in range(self.height):
+                st = map[x][y].structure
+                if st is not None:
+                    if st.team == self.us:
+                        my_tiles.add((x, y))
+                    else:
+                        blocked_tiles.add((x, y))
+
+
+        path = self.find_path(my_tiles, pops, blocked_tiles)
+        if path is not None:
+            for x, y in path:
+                if map[x][y].population > 0:
                     t = StructureType.TOWER
                 else:
                     t = StructureType.ROAD
-                self.build(t, loc[0], loc[1])
+                self.build(t, x, y)
                 # print(self._to_build[0])
-
 
         return
