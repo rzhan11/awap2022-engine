@@ -312,8 +312,22 @@ class Game:
         # updates powered towers
         # self.update_tower_status()
 
+
+        # print("a", self.p1_state)
+        # print(self.p2_state)
+
         # update money, utility
         self.update_resources()
+
+        # print(self.p1_state)
+        # print(self.p2_state)
+        # if turn_num == 1:
+        #
+        #     exit()
+
+        # save money/utility info pre-turn
+        self.money_history += [(self.p1_state.money, self.p2_state.money)]
+        self.utility_history += [(self.p1_state.utility, self.p2_state.utility)]
 
         # reset builds
         self.p1._to_build = []
@@ -332,9 +346,9 @@ class Game:
             p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
             p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
 
+        # save replay info with changes
         self.frame_changes += [p1_changes + p2_changes]
-        self.money_history += [(self.p1_state.money, self.p2_state.money)]
-        self.utility_history += [(self.p1_state.utility, self.p2_state.utility)]
+
 
     '''
     Updates which towers are powered
@@ -392,7 +406,7 @@ class Game:
                     self.p1_state.money += score
                     self.p1_state.utility += score
                 elif tow.team == Team.BLUE:
-                    self.p1_state.money += score
+                    self.p2_state.money += score
                     self.p2_state.utility += score
 
     '''
