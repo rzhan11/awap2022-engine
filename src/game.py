@@ -31,6 +31,7 @@ class Tile:
         self.y = y
         self.population = population
         self.structure = structure
+        # todo: delete this
         self.has_preserve = False
 
     def _copy(self):
@@ -309,7 +310,7 @@ class Game:
     def play_turn(self, turn_num):
 
         # updates powered towers
-        self.update_tower_status()
+        # self.update_tower_status()
 
         # update money, utility
         self.update_resources()
@@ -384,9 +385,9 @@ class Game:
             tile = self.map[x][y]
             for tow in towers:
                 # skip tower if not powered
-                if not self.is_powered[tow.team][tow.x][tow.y]:
-                    continue
-                score = tile.population / len(tow)
+                # if not self.is_powered[tow.team][tow.x][tow.y]:
+                #     continue
+                score = tile.population / len(towers)
                 if tow.team == Team.RED:
                     self.p1_state.money += score
                     self.p1_state.utility += score
@@ -418,7 +419,7 @@ class Game:
                 # add towers to populated tiles (for our updates on our side)
                 if s.type == StructureType.TOWER:
                     for (dx, dy) in self.tower_diffs:
-                        nx, ny = x + dx, y + dy
+                        nx, ny = s.x + dx, s.y + dy
                         if (nx, ny) in self.populated_tiles:
                             self.populated_tiles[(nx, ny)] += [s]
         return new_builds
