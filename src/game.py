@@ -23,16 +23,16 @@ Fields:
 x - x position of this tile
 y - y position of this tile
 population - population of this tile
+passability - passability of this tile
 
 '''
 class Tile:
-    def __init__(self, x, y, population, structure):
+    def __init__(self, x, y, population, structure):#, passability):
         self.x = x
         self.y = y
         self.population = population
         self.structure = structure
-        # todo: delete this
-        self.has_preserve = False
+        # self.passability = passability
 
     def _copy(self):
         return Tile(self.x, self.y, self.population, Structure.make_copy(self.structure))
@@ -87,19 +87,18 @@ height - height of the map
 sym - type of symmetry (x, y, rotational)
 num_generators - number of initial generators for each team
 num_cities - number of cities
-num_preserves - number of preserves (tiles that cannot be built on)
 
-TODO: Add a field for paths for custom maps
+TODO: Add a field for paths for custom maps - wait til know format?
 '''
 class MapInfo():
-    def __init__(self, seed, width, height, sym=MapUtil.x_sym, num_generators=1, num_cities=10, num_preserves=10):
+    def __init__(self, seed, width, height, sym=MapUtil.x_sym, num_generators=1, num_cities=10):
         self.seed = seed
         self.width = width
         self.height = height
         self.sym = sym
         self.num_generators = num_generators
         self.num_cities = num_cities
-        self.num_preserves = num_preserves
+        
 
 
 import importlib
@@ -170,9 +169,8 @@ class Game:
     -----
     1. Creates all tiles for the map
     2. Assigns population to map (while maintaining symmetry)
-    3. Creates preserves (with symmetry)
-    4. Creates generators (with symmetry)
-    5. Creates 'simple_map' (used in replays)
+    3. Creates generators (with symmetry)
+    4. Creates 'simple_map' (used in replays)
     -----
     Output:
     self.map = 2d array of tiles, where each tile contains (x, y, population, structure)
@@ -199,13 +197,6 @@ class Game:
             pop = random.randrange(GC.CITY_MIN_POP, GC.CITY_MAX_POP)
             self.map[x][y].population = pop
             self.map[x2][y2].population = pop
-
-        # adds preserves
-        for i in range(map_info.num_preserves):
-            x, y = random.randint(0, self.width - 1), random.randint(0, self.height - 1)
-            x2, y2 = map_info.sym(x, y, self.width, self.height)
-            self.map[x][y].structure = Structure(StructureType.PRESERVE, x, y, Team.NEUTRAL)
-            self.map[x2][y2].structure = Structure(StructureType.PRESERVE, x2, y2, Team.NEUTRAL)
 
         # adds generators (and maintains 'generators' structure)
         self.generators = [[], []]
@@ -442,16 +433,12 @@ class Game:
     '''
     Returns whether or not a given structure can be built
     -----
-    Checks if is blocked by preserve, position in bounds, blocked by other buildings
+    Checks if position in bounds, blocked by other buildings
     '''
     # potential todo: distance requirement from other towers
     def can_build(self, s):
         # not in bounds or not buildable
-        if not self.in_bounds(s.x, s.y) or not s.type.get_can_build():
-            return False
-        # not blocked by preserve
-        return self.map[s.x][s.y].structure is None
-
+        return self.in_bounds(s.x, s.y) and s.type.get_can_build()
 
     '''
     Saves replay information to a file (in JSON format)
