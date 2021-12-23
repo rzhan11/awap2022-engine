@@ -218,6 +218,15 @@ class Game:
     '''
     def in_bounds(self, i, j):
         return 0 <= i < self.width and 0 <= j < self.height
+    
+    def adjacent(self, s):
+        for dx,dy in [(-1,0),(0,-1),(1,0),(0,1)]:
+            nX, nY = s.x + dx, s.y + dy
+            if self.in_bounds(nX, nY):
+                nS = self.map[nX][nY].structure
+                if nS and nS.team == s.team:
+                    return True
+        return False
 
     '''
     Initialies a matrix of neighbors for each tile
@@ -275,6 +284,25 @@ class Game:
     def play_game(self):
         for turn_num in range(GC.NUM_ROUNDS):
             self.play_turn(turn_num)
+        # TODO: win condition - # players served
+        
+        # Win Condition: Returns True if Red wins
+
+        # Option 1: Just the final round
+        # for (x, y), towers in self.populated_tiles.items():
+        #     tile = self.map[x][y]
+        #     for tow in towers:
+        #         pop = tile.population / len(towers)
+        #         if tow.team == Team.RED:
+        #             self.p1_state.money += score
+        #             self.p1_state.utility += score
+        #         elif tow.team == Team.BLUE:
+        #             self.p2_state.money += score
+        #             self.p2_state.utility += score
+        
+        # # Option 2: Cumulative Utility, people served over the years
+        # rScore, bScore = self.p1_state.utility, self.p2_state.utility
+
     '''
     Runs a single turn of the game
     ---
@@ -391,28 +419,10 @@ class Game:
         self.p1_state.money += GC.PLAYER_BASE_INCOME
         self.p2_state.money += GC.PLAYER_BASE_INCOME
 
-        # Pay for new buildings
-        if len(self.frame_changes) > 0:
-            new_builds = self.frame_changes[-1]
-            for s in new_builds:
-                passability = self.map[s.x][s.y].passability
-                cost = None
-                if s.type.name == "TOWER":
-                    cost = GC.TOWER_BUILD_COST
-                elif s.type.name == "ROAD":
-                    cost = GC.ROAD_BUILD_COST
-                if s.team == Team.RED:
-                    self.p1_state.money -= passability * cost
-                elif s.team == Team.BLUE:
-                    self.p2_state.money -= passability * cost
-
         # TODO: test alternative money systems
         for (x, y), towers in self.populated_tiles.items():
             tile = self.map[x][y]
             for tow in towers:
-                # skip tower if not powered
-                # if not self.is_powered[tow.team][tow.x][tow.y]:
-                #     continue
                 score = tile.population / len(towers)
                 if tow.team == Team.RED:
                     self.p1_state.money += score
@@ -439,7 +449,7 @@ class Game:
         for s in structures:
             # check if can build
             if self.can_build(s) and p_state.money >= s.type.get_cost():
-                p_state.money -= s.type.get_cost()
+                p_state.money -= s.type.get_cost() * self.map[s.x][s.y].passability
                 self.map[s.x][s.y].structure = s
                 new_builds += [s]
                 # add towers to populated tiles (for our updates on our side)
@@ -459,11 +469,9 @@ class Game:
     # potential todo: distance requirement from other towers
     def can_build(self, s):
         # not in bounds or not buildable
-
-        # check if something's already there (particularly generator)
         # check if adjacent to other tiles
-        # check if have money to build this one
-        if not self.in_bounds(s.x, s.y) or not s.type.get_can_build():
+        
+        if not self.in_bounds(s.x, s.y) or not self.adjacent(s) or not s.type.get_can_build():
             return False
         return self.map[s.x][s.y].structure is None
 
