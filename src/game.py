@@ -463,11 +463,8 @@ class Game:
         # check if something's already there (particularly generator)
         # check if adjacent to other tiles
         # check if have money to build this one
-        # return self.in_bounds(s.x, s.y) and s.type.get_can_build()
-
         if not self.in_bounds(s.x, s.y) or not s.type.get_can_build():
             return False
-        # not blocked by preserve
         return self.map[s.x][s.y].structure is None
 
     '''
