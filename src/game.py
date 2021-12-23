@@ -321,14 +321,14 @@ class Game:
         self.money_history += [(self.p1_state.money, self.p2_state.money)]
         self.utility_history += [(self.p1_state.utility, self.p2_state.utility)]
 
-        # reset builds
-        self.p1._to_build = []
-        self.p2._to_build = []
-
         # get player turns
         for p in [{"player":self.p1, "state":self.p1_state},
                 {"player":self.p2, "state":self.p2_state}]:
             if p["state"].active:
+                # reset build
+                p["player"]._to_build = []
+                
+                # play turn
                 t0 = time.time()
                 p["player"].play_turn(turn_num, self.map_copy(), p["state"])
                 tp = time.time()
@@ -391,6 +391,21 @@ class Game:
         self.p1_state.money += GC.PLAYER_BASE_INCOME
         self.p2_state.money += GC.PLAYER_BASE_INCOME
 
+        # Pay for new buildings
+        if len(self.frame_changes) > 0:
+            new_builds = self.frame_changes[-1]
+            for s in new_builds:
+                passability = self.map[s.x][s.y].passability
+                cost = None
+                if s.type.name == "TOWER":
+                    cost = GC.TOWER_BUILD_COST
+                elif s.type.name == "ROAD":
+                    cost = GC.ROAD_BUILD_COST
+                if s.team == Team.RED:
+                    self.p1_state.money -= passability * cost
+                elif s.team == Team.BLUE:
+                    self.p2_state.money -= passability * cost
+
         # TODO: test alternative money systems
         for (x, y), towers in self.populated_tiles.items():
             tile = self.map[x][y]
@@ -444,7 +459,16 @@ class Game:
     # potential todo: distance requirement from other towers
     def can_build(self, s):
         # not in bounds or not buildable
-        return self.in_bounds(s.x, s.y) and s.type.get_can_build()
+
+        # check if something's already there (particularly generator)
+        # check if adjacent to other tiles
+        # check if have money to build this one
+        # return self.in_bounds(s.x, s.y) and s.type.get_can_build()
+
+        if not self.in_bounds(s.x, s.y) or not s.type.get_can_build():
+            return False
+        # not blocked by preserve
+        return self.map[s.x][s.y].structure is None
 
     '''
     Saves replay information to a file (in JSON format)
