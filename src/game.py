@@ -99,7 +99,7 @@ class MapInfo():
         self.sym = sym
         self.num_generators = num_generators
         self.num_cities = num_cities
-        
+
 
 
 import importlib
@@ -196,7 +196,7 @@ class Game:
         for i in range(map_info.num_cities):
             x, y = random.randint(0, self.width - 1), random.randint(0, self.height - 1)
             x2, y2 = map_info.sym(x, y, self.width, self.height)
-            pop = random.randrange(GC.CITY_MIN_POP, GC.CITY_MAX_POP)
+            pop = random.randrange(GC.MIN_POP, GC.MAX_POP)
             self.map[x][y].population = pop
             self.map[x2][y2].population = pop
 
@@ -205,27 +205,32 @@ class Game:
         for i in range(map_info.num_generators):
             x, y = random.randint(0, self.width - 1), random.randint(0, self.height - 1)
             x2, y2 = map_info.sym(x, y, self.width, self.height)
-            pop = random.randrange(GC.CITY_MIN_POP, GC.CITY_MAX_POP)
             self.map[x][y].structure = Structure(StructureType.GENERATOR, x, y, Team.RED)
             self.map[x2][y2].structure = Structure(StructureType.GENERATOR, x2, y2, Team.BLUE)
             self.generators[0] += [(x, y)]
             self.generators[1] += [(x2, y2)]
 
-        self.simple_map = [[[tile.population, Structure.make_copy(tile.structure)] for tile in col] for col in self.map]
+        # adds passability
+        for x in range(self.width):
+            for y in range(self.height):
+                x2, y2 = map_info.sym(x, y, self.width, self.height)
+                pval = random.randrange(GC.MIN_PASS, GC.MAX_PASS)
+                self.map[x][y].passability = pval
+                self.map[x2][y2].passability = pval
+
+        self.simple_map = [[[tile.passability, tile.population, Structure.make_copy(tile.structure)] for tile in col] for col in self.map]
 
     '''
     Returns whether (i, j) is contained in the map
     '''
     def in_bounds(self, i, j):
         return 0 <= i < self.width and 0 <= j < self.height
-    
+
     def adjacent(self, s):
-        for dx,dy in [(-1,0),(0,-1),(1,0),(0,1)]:
-            nX, nY = s.x + dx, s.y + dy
-            if self.in_bounds(nX, nY):
-                nS = self.map[nX][nY].structure
-                if nS and nS.team == s.team:
-                    return True
+        for nX, nY in self.map_neighbors[s.x][s.y]:
+            nS = self.map[nX][nY].structure
+            if nS and nS.team == s.team:
+                return True
         return False
 
     '''
@@ -285,7 +290,7 @@ class Game:
         for turn_num in range(GC.NUM_ROUNDS):
             self.play_turn(turn_num)
         # TODO: win condition - # players served
-        
+
         # Win Condition: Returns True if Red wins
 
         # Option 1: Just the final round
@@ -299,7 +304,7 @@ class Game:
         #         elif tow.team == Team.BLUE:
         #             self.p2_state.money += score
         #             self.p2_state.utility += score
-        
+
         # # Option 2: Cumulative Utility, people served over the years
         # rScore, bScore = self.p1_state.utility, self.p2_state.utility
 
@@ -355,7 +360,7 @@ class Game:
             if p["state"].active:
                 # reset build
                 p["player"]._to_build = []
-                
+
                 # play turn
                 t0 = time.time()
                 p["player"].play_turn(turn_num, self.map_copy(), p["state"])
@@ -448,8 +453,9 @@ class Game:
         structures = [Structure(struct_type, x, y, team) for (struct_type, x, y) in builds]
         for s in structures:
             # check if can build
-            if self.can_build(s) and p_state.money >= s.type.get_cost():
-                p_state.money -= s.type.get_cost() * self.map[s.x][s.y].passability
+            s_cost = s.get_cost(self.map[s.x][s.y].passability)
+            if self.can_build(s) and p_state.money >= s_cost:
+                p_state.money -= s_cost
                 self.map[s.x][s.y].structure = s
                 new_builds += [s]
                 # add towers to populated tiles (for our updates on our side)
@@ -470,7 +476,7 @@ class Game:
     def can_build(self, s):
         # not in bounds or not buildable
         # check if adjacent to other tiles
-        
+
         if not self.in_bounds(s.x, s.y) or not self.adjacent(s) or not s.type.get_can_build():
             return False
         return self.map[s.x][s.y].structure is None

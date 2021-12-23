@@ -6,8 +6,11 @@ class GameConstants:
     MAX_HEIGHT = 64
     MOVE_DIRS = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
-    CITY_MIN_POP = 1
-    CITY_MAX_POP = 10
+    MIN_POP = 1
+    MAX_POP = 10
+
+    MIN_PASS = 1
+    MAX_PASS = 10
 
     PLAYER_STARTING_MONEY = 250
     PLAYER_BASE_INCOME = 10

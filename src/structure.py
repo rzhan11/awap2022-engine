@@ -52,7 +52,7 @@ class StructureType(Enum):
             can_build=True
         )
 
-    def get_cost(self):
+    def get_base_cost(self):
         return self.value.cost
 
     def get_can_build(self):
@@ -80,6 +80,11 @@ class Structure:
         self.y = y
         self.team = team
         self.type = struct_type
+
+
+    def get_cost(self, passability):
+        return self.type.get_base_cost() * passability
+
 
     def __str__(self):
         return f"[{self.type.name} {str(self.team)} {(self.x, self.y)}]"
