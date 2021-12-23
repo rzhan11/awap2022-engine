@@ -459,7 +459,6 @@ class Game:
     # potential todo: distance requirement from other towers
     def can_build(self, s):
         # not in bounds or not buildable
-        # piss again
 
         # check if something's already there (particularly generator)
         # check if adjacent to other tiles
