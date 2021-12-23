@@ -460,9 +460,6 @@ class Game:
     def can_build(self, s):
         # not in bounds or not buildable
 
-
-        # piss
-
         # check if something's already there (particularly generator)
         # check if adjacent to other tiles
         # check if have money to build this one
