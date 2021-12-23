@@ -6,6 +6,7 @@ todo: basic viewer
 
 import random
 import string
+import time
 import math
 import json
 
@@ -27,15 +28,15 @@ passability - passability of this tile
 
 '''
 class Tile:
-    def __init__(self, x, y, population, structure):#, passability):
+    def __init__(self, x, y, population, structure, passability):
         self.x = x
         self.y = y
         self.population = population
         self.structure = structure
-        # self.passability = passability
+        self.passability = passability
 
     def _copy(self):
-        return Tile(self.x, self.y, self.population, Structure.make_copy(self.structure))
+        return Tile(self.x, self.y, self.population, Structure.make_copy(self.structure), self.passability)
 
 '''
 Contains many useful functions for map operations
@@ -188,7 +189,8 @@ class Game:
         assert(GC.MIN_WIDTH <= self.width <= GC.MAX_WIDTH)
         assert(GC.MIN_HEIGHT <= self.height <= GC.MAX_HEIGHT)
 
-        self.map = [[Tile(i, j, 0, None) for j in range(self.height)] for i in range(self.width)]
+        # Tile(self, x, y, population, structure, passability)
+        self.map = [[Tile(i, j, 0, None, 1) for j in range(self.height)] for i in range(self.width)]
 
         # adds cities (tiles with population)
         for i in range(map_info.num_cities):
@@ -273,7 +275,6 @@ class Game:
     def play_game(self):
         for turn_num in range(GC.NUM_ROUNDS):
             self.play_turn(turn_num)
-
     '''
     Runs a single turn of the game
     ---
@@ -325,9 +326,14 @@ class Game:
         self.p2._to_build = []
 
         # get player turns
-        # TODO: penalize players taking excessive compute / kill extremely slow players
-        self.p1.play_turn(turn_num, self.map_copy(), self.p1_state)
-        self.p2.play_turn(turn_num, self.map_copy(), self.p2_state)
+        for p in [{"player":self.p1, "state":self.p1_state},
+                {"player":self.p2, "state":self.p2_state}]:
+            if p["state"].active:
+                t0 = time.time()
+                p["player"].play_turn(turn_num, self.map_copy(), p["state"])
+                tp = time.time()
+                if tp - t0 > GC.MAX_TURN_TIME:
+                    p["state"].active = False
 
         # update game state based on player actions
         if turn_num % 2 == 0: # alternate build priority (if two players try to build on the same tile)

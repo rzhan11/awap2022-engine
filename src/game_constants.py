@@ -16,3 +16,5 @@ class GameConstants:
     NUM_ROUNDS = 250
 
     TOWER_RADIUS = 25
+
+    MAX_TURN_TIME = 10
