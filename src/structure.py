@@ -51,12 +51,6 @@ class StructureType(Enum):
             cost=250,
             can_build=True
         )
-    PRESERVE = StructureInfo(
-            id=4,
-            name="Preserve",
-            cost=0,
-            can_build=False
-        )
 
     def get_cost(self):
         return self.value.cost
