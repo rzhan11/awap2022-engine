@@ -2,6 +2,7 @@ from structure import *
 from game import *
 from custom_json import *
 
+# you have to be in src
 bot_folder = "../bots"
 bot_path = f"{bot_folder}/bot.py"
 save_path = f"../replays"

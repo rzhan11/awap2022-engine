@@ -344,6 +344,10 @@ class Game:
         # update money, utility
         self.update_resources()
 
+        # testing for rounding
+        # for p_state in [self.p1_state, self.p2_state]:
+        #     print(p_state.money)
+
         # print(self.p1_state)
         # print(self.p2_state)
         # if turn_num == 1:
@@ -436,6 +440,10 @@ class Game:
                     self.p2_state.money += score
                     self.p2_state.utility += score
 
+        # round money to the nearest 0.1 at end of each round
+        for p_state in [self.p1_state, self.p2_state]:
+            p_state.money = round(p_state.money, 1)
+
     '''
     Attempts to build structure instructions for a given player/team
     -----
@@ -464,6 +472,7 @@ class Game:
                         nx, ny = s.x + dx, s.y + dy
                         if (nx, ny) in self.populated_tiles:
                             self.populated_tiles[(nx, ny)] += [s]
+
         return new_builds
 
 
