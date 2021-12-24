@@ -176,7 +176,7 @@ class Game:
     Output:
     self.map = 2d array of tiles, where each tile contains (x, y, population, structure)
     self.generators = [list of generators for p1, list of generators for p2]
-    self.simple_map = 2d array of tuples containing (population, structure) for each tile - used for replay information
+    self.simple_map = 2d array of tuples containing (passability, population, structure) for each tile - used for replay information
 
     '''
     def init_map(self, map_info):
@@ -517,3 +517,5 @@ class Game:
                 "structure_type_ids": structure_type_ids
             }
             json.dump(obj, f, cls=CustomEncoder)
+
+        return id
