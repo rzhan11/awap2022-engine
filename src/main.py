@@ -2,7 +2,7 @@ from structure import *
 from game import *
 from custom_json import *
 
-bot_folder = "/Users/michellezhu/Clubs/ACM/awap2022/cell-towers/bots"
+bot_folder = "../bots"
 bot_path = f"{bot_folder}/bot.py"
 save_path = f"../replays"
 
