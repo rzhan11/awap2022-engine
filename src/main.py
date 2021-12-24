@@ -9,6 +9,11 @@ bot_folder = "../bots"
 bot_path = f"{bot_folder}/bot.py"
 save_path = "../replays"
 
+# Exact format of maps:
+# .json file with "info" and "generators" entries
+# info is a 2d array of (passability, population) tuples for each tile location
+# generators is a 1d array of (x,y) coordinates if there exist a generator at (x,y)
+
 map_settings = MapInfo(1078, 48, 48, MapUtil.x_sym, num_generators=3, num_cities=50)
 
 game = Game(bot_path, bot_path, map_settings)
