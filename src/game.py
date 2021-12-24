@@ -371,25 +371,8 @@ class Game:
     '''
     def play_turn(self, turn_num):
 
-        # updates powered towers
-        # self.update_tower_status()
-
-
-        # print("a", self.p1_state)
-        # print(self.p2_state)
-
         # update money, utility
         self.update_resources()
-
-        # testing for rounding
-        # for p_state in [self.p1_state, self.p2_state]:
-        #     print(p_state.money)
-
-        # print(self.p1_state)
-        # print(self.p2_state)
-        # if turn_num == 1:
-        #
-        #     exit()
 
         # save money/utility info pre-turn
         self.money_history += [(self.p1_state.money, self.p2_state.money)]
@@ -420,28 +403,8 @@ class Game:
         # save replay info with changes
         self.frame_changes += [p1_changes + p2_changes]
 
-
     '''
-    Updates which towers are powered
-    -----
-    Updates the matrix 'is_powered' to correctly reflect whether a given tile is powered by team t
-    is_powered[t][x][y] => "is (x, y) powered by team 't' "
-    -----
-    Output:
-
-    self.is_powered = Two 2D boolean arrays containing whether or not a given tile is powered for a given team
-        Format: is_powered[t][x][y] - True if tile (x, y) is powered for team 't'
-    '''
-    def update_tower_status(self):
-        self.is_powered = [[[False for j in range(self.height)] for i in range(self.width)] for ii in range(2)]
-        # run dfs from each generator
-        for ti, gens in enumerate(self.generators):
-            for gx, gy in gens:
-                t = self.get_team_present(gx, gy)
-                self.run_tower_dfs(gx, gy, self.is_powered[ti], t)
-
-    '''
-    Helper method for running dfs
+    Helper method for running dfs - should be unnecessary / deprecated
     '''
     def run_tower_dfs(self, x, y, visited, cur_team):
         visited[x][y] = True

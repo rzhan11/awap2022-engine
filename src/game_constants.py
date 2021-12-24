@@ -20,4 +20,4 @@ class GameConstants:
 
     TOWER_RADIUS = 25
 
-    MAX_TURN_TIME = 10
+    MAX_TURN_TIME = 5000
