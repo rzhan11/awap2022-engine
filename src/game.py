@@ -239,13 +239,8 @@ class Game:
             assert(GC.MIN_WIDTH <= self.width <= GC.MAX_WIDTH)
             assert(GC.MIN_HEIGHT <= self.height <= GC.MAX_HEIGHT)
 
-            self.map = [[Tile(i, j, 0, None, 1) for j in range(self.height)] for i in range(self.width)]
-
-            for i in range(self.height):
-                for j in range(self.width):
-                    self.map[i][j].passability = info[i][j][0]
-                    self.map[i][j].population = info[i][j][1]
-
+            self.map = [[Tile(i, j, info[i][j][1], None, info[i][j][0]) for j in range(self.height)] for i in range(self.width)]
+            
             self.generators = [[], []]
             for x,y in generators1:
                 self.map[x][y].structure = Structure(StructureType.GENERATOR, x, y, Team.RED)

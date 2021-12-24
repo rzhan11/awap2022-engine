@@ -17,7 +17,7 @@ def save_map(replay_file, id):
     simple_map = replay_data["map"]
 
     rows, cols = len(simple_map[0]), len(simple_map)
-    info = [[0]*cols]*rows
+    info = [[0 for _ in range(cols)] for _ in range(rows)]
     generators1, generators2 = [], []
 
     # iterate through simple map to get info

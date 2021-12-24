@@ -16,13 +16,13 @@ save_path = "../replays"
 # generators1 is a 1d array of (x,y) coordinates if there exist a generator for team 1 at (x,y)
 # generators2 is a 1d array of (x,y) coordinates if there exist a generator for team 2 at (x,y)
 
-map_path = "../maps/map-3085633.awap22"
+map_path = "../maps/map-9034983.awap22"
 
 # Using custom map
-# map_settings = MapInfo(custom_map_path=map_path)
+map_settings = MapInfo(custom_map_path=map_path)
 
 # No custom map (Random map)
-map_settings = MapInfo(1078, 48, 48, MapUtil.x_sym, num_generators=3, num_cities=50)
+# map_settings = MapInfo(1078, 48, 48, MapUtil.x_sym, num_generators=3, num_cities=50)
 
 game = Game(bot_path, bot_path, map_settings)
 
