@@ -88,18 +88,16 @@ height - height of the map
 sym - type of symmetry (x, y, rotational)
 num_generators - number of initial generators for each team
 num_cities - number of cities
-
-TODO: Add a field for paths for custom maps - wait til know format?
 '''
 class MapInfo():
-    def __init__(self, seed, width, height, sym=MapUtil.x_sym, num_generators=1, num_cities=10):
+    def __init__(self, seed=0, width=48, height=48, sym=MapUtil.x_sym, num_generators=1, num_cities=10, custom_map_path=None):
         self.seed = seed
         self.width = width
         self.height = height
         self.sym = sym
         self.num_generators = num_generators
         self.num_cities = num_cities
-
+        self.custom_map_path = custom_map_path
 
 
 import importlib
@@ -166,57 +164,101 @@ class Game:
         self.utility_history = []
 
     '''
-    Creates the initial map based on map_info
-    -----
-    1. Creates all tiles for the map
-    2. Assigns population to map (while maintaining symmetry)
-    3. Creates generators (with symmetry)
-    4. Creates 'simple_map' (used in replays)
-    -----
-    Output:
-    self.map = 2d array of tiles, where each tile contains (x, y, population, structure)
-    self.generators = [list of generators for p1, list of generators for p2]
-    self.simple_map = 2d array of tuples containing (passability, population, structure) for each tile - used for replay information
-
+        Creates the initial map, either random or based on custom map
     '''
     def init_map(self, map_info):
-        random.seed(map_info.seed)
 
-        self.map_name = f"random-{map_info.seed}"
-        self.width = map_info.width
-        self.height = map_info.height
+        '''
+        Creates the initial map based on map_info if no custom map path was passed in
+        -----
+        1. Creates all tiles for the map
+        2. Assigns population to map (while maintaining symmetry)
+        3. Creates generators (with symmetry)
+        4. Creates 'simple_map' (used in replays)
+        -----
+        Output:
+        self.map = 2d array of tiles, where each tile contains (x, y, population, structure)
+        self.generators = [list of generators for p1, list of generators for p2]
+        self.simple_map = 2d array of tuples containing (passability, population, structure) for each tile - used for replay information
 
-        assert(GC.MIN_WIDTH <= self.width <= GC.MAX_WIDTH)
-        assert(GC.MIN_HEIGHT <= self.height <= GC.MAX_HEIGHT)
+        '''
 
-        # Tile(self, x, y, population, structure, passability)
-        self.map = [[Tile(i, j, 0, None, 1) for j in range(self.height)] for i in range(self.width)]
+        def init_random_map():
+            random.seed(map_info.seed)
 
-        # adds cities (tiles with population)
-        for i in range(map_info.num_cities):
-            x, y = random.randint(0, self.width - 1), random.randint(0, self.height - 1)
-            x2, y2 = map_info.sym(x, y, self.width, self.height)
-            pop = random.randrange(GC.MIN_POP, GC.MAX_POP)
-            self.map[x][y].population = pop
-            self.map[x2][y2].population = pop
+            self.map_name = f"random-{map_info.seed}"
+            self.width = map_info.width
+            self.height = map_info.height
 
-        # adds generators (and maintains 'generators' structure)
-        self.generators = [[], []]
-        for i in range(map_info.num_generators):
-            x, y = random.randint(0, self.width - 1), random.randint(0, self.height - 1)
-            x2, y2 = map_info.sym(x, y, self.width, self.height)
-            self.map[x][y].structure = Structure(StructureType.GENERATOR, x, y, Team.RED)
-            self.map[x2][y2].structure = Structure(StructureType.GENERATOR, x2, y2, Team.BLUE)
-            self.generators[0] += [(x, y)]
-            self.generators[1] += [(x2, y2)]
+            assert(GC.MIN_WIDTH <= self.width <= GC.MAX_WIDTH)
+            assert(GC.MIN_HEIGHT <= self.height <= GC.MAX_HEIGHT)
 
-        # adds passability
-        for x in range(self.width):
-            for y in range(self.height):
+            # Tile(self, x, y, population, structure, passability)
+            self.map = [[Tile(i, j, 0, None, 1) for j in range(self.height)] for i in range(self.width)]
+
+            # adds cities (tiles with population)
+            for i in range(map_info.num_cities):
+                x, y = random.randint(0, self.width - 1), random.randint(0, self.height - 1)
                 x2, y2 = map_info.sym(x, y, self.width, self.height)
-                pval = random.randrange(GC.MIN_PASS, GC.MAX_PASS)
-                self.map[x][y].passability = pval
-                self.map[x2][y2].passability = pval
+                pop = random.randrange(GC.MIN_POP, GC.MAX_POP)
+                self.map[x][y].population = pop
+                self.map[x2][y2].population = pop
+
+            # adds generators (and maintains 'generators' structure)
+            self.generators = [[], []]
+            for i in range(map_info.num_generators):
+                x, y = random.randint(0, self.width - 1), random.randint(0, self.height - 1)
+                x2, y2 = map_info.sym(x, y, self.width, self.height)
+                self.map[x][y].structure = Structure(StructureType.GENERATOR, x, y, Team.RED)
+                self.map[x2][y2].structure = Structure(StructureType.GENERATOR, x2, y2, Team.BLUE)
+                self.generators[0] += [(x, y)]
+                self.generators[1] += [(x2, y2)]
+
+            # adds passability
+            for x in range(self.width):
+                for y in range(self.height):
+                    x2, y2 = map_info.sym(x, y, self.width, self.height)
+                    pval = random.randrange(GC.MIN_PASS, GC.MAX_PASS)
+                    self.map[x][y].passability = pval
+                    self.map[x2][y2].passability = pval
+
+        def init_custom_map():
+            map_file = map_info.custom_map_path
+            map_data = json.load(open(map_file))
+
+            info = map_data["info"]
+            generators1 = map_data["generators1"]
+            generators2 = map_data["generators2"]
+
+            # Parse custom map file name to name??
+            id = ""
+            self.map_name = f"custom{id}"
+            self.height = len(info)
+            self.width = len(info[0])
+
+            assert(GC.MIN_WIDTH <= self.width <= GC.MAX_WIDTH)
+            assert(GC.MIN_HEIGHT <= self.height <= GC.MAX_HEIGHT)
+
+            self.map = [[Tile(i, j, 0, None, 1) for j in range(self.height)] for i in range(self.width)]
+
+            for i in range(self.height):
+                for j in range(self.width):
+                    self.map[i][j].passability = info[i][j][0]
+                    self.map[i][j].population = info[i][j][1]
+
+            self.generators = [[], []]
+            for x,y in generators1:
+                self.map[x][y].structure = Structure(StructureType.GENERATOR, x, y, Team.RED)
+                self.generators[0] += [(x, y)]
+
+            for x,y in generators2:
+                self.map[x][y].structure = Structure(StructureType.GENERATOR, x, y, Team.BLUE)
+                self.generators[1] += [(x, y)]
+
+        if map_info.custom_map_path:
+            init_custom_map()
+        else:
+            init_random_map()
 
         self.simple_map = [[[tile.passability, tile.population, Structure.make_copy(tile.structure)] for tile in col] for col in self.map]
 
@@ -517,5 +559,3 @@ class Game:
                 "structure_type_ids": structure_type_ids
             }
             json.dump(obj, f, cls=CustomEncoder)
-
-        return id

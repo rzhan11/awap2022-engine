@@ -4,16 +4,24 @@ from structure import *
 from game import *
 from custom_json import *
 
-# you have to be in src
+# you have to be in src to run main.py successfully
+
 bot_folder = "../bots"
 bot_path = f"{bot_folder}/bot.py"
 save_path = "../replays"
 
-# Exact format of maps:
-# .json file with "info" and "generators" entries
+# Exact format of a custom map file:
+# .json file with "info", "generators1", and "generators2" entries
 # info is a 2d array of (passability, population) tuples for each tile location
-# generators is a 1d array of (x,y) coordinates if there exist a generator at (x,y)
+# generators1 is a 1d array of (x,y) coordinates if there exist a generator for team 1 at (x,y)
+# generators2 is a 1d array of (x,y) coordinates if there exist a generator for team 2 at (x,y)
 
+map_path = "../maps/map-3085633.awap22"
+
+# Using custom map
+# map_settings = MapInfo(custom_map_path=map_path)
+
+# No custom map (Random map)
 map_settings = MapInfo(1078, 48, 48, MapUtil.x_sym, num_generators=3, num_cities=50)
 
 game = Game(bot_path, bot_path, map_settings)
@@ -26,43 +34,6 @@ game = Game(bot_path, bot_path, map_settings)
 game.play_game()
 # game.play_turn(0)
 
-id = game.save_replay(save_path)
-
-
-# TEMPORARY: being used to make a sample map in the correct format
-# to test the code used for reading custom maps
-
-def save_map():
-
-    #load simple map entry from replay json file
-    replay_file = f"{save_path}/replay-{id}.awap22"
-    replay_data = json.load(open(replay_file))
-
-    simple_map = replay_data["map"]
-
-    rows, cols = len(simple_map[0]), len(simple_map)
-    info = [[0]*cols]*rows
-    generators = []
-
-    # iterate through simple map to get info
-    for i in range(rows):
-        for j in range(cols):
-            passability, population, structure = simple_map[i][j]
-            info[i][j] = (passability, population)
-
-            # ref structure.py: code for generator type is 0
-            if structure and structure[3] == 0:
-                generators += [(i,j)]
-        
-    # save into map json file
-    with open("sample_map.awap22", "w") as f:
-        obj = {
-            "info": info,
-            "generators": generators,
-        }
-        json.dump(obj, f)
-
-save_map()
-
+game.save_replay(save_path)
 
 # print(CustomEncoder().encode(game.map[0][51].structures))
