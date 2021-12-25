@@ -240,7 +240,7 @@ class Game:
             assert(GC.MIN_HEIGHT <= self.height <= GC.MAX_HEIGHT)
 
             self.map = [[Tile(i, j, info[i][j][1], None, info[i][j][0]) for j in range(self.height)] for i in range(self.width)]
-            
+
             self.generators = [[], []]
             for x,y in generators1:
                 self.map[x][y].structure = Structure(StructureType.GENERATOR, x, y, Team.RED)
@@ -376,7 +376,6 @@ class Game:
 
         # save money/utility info pre-turn
         self.money_history += [(self.p1_state.money, self.p2_state.money)]
-        self.utility_history += [(self.p1_state.utility, self.p2_state.utility)]
 
         # get player turns
         for p in [{"player":self.p1, "state":self.p1_state},
@@ -399,6 +398,10 @@ class Game:
         else:
             p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
             p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
+
+        # calculate utility
+        self.calculate_utility()
+        self.utility_history += [(self.p1_state.utility, self.p2_state.utility)]
 
         # save replay info with changes
         self.frame_changes += [p1_changes + p2_changes]
@@ -435,14 +438,29 @@ class Game:
                 score = tile.population / len(towers)
                 if tow.team == Team.RED:
                     self.p1_state.money += score
-                    self.p1_state.utility += score
                 elif tow.team == Team.BLUE:
                     self.p2_state.money += score
-                    self.p2_state.utility += score
 
         # round money to the nearest 0.1 at end of each round
         for p_state in [self.p1_state, self.p2_state]:
             p_state.money = round(p_state.money, 1)
+
+    '''
+    Calculates utility for each team
+    '''
+    def calculate_utility(self):
+        self.p1_state.utility = 0
+        self.p2_state.utility = 0
+        for (x, y), towers in self.populated_tiles.items():
+            tile = self.map[x][y]
+            for tow in towers:
+                score = tile.population / len(towers)
+                if tow.team == Team.RED:
+                    self.p1_state.utility += score
+                elif tow.team == Team.BLUE:
+                    self.p2_state.utility += score
+
+
 
     '''
     Attempts to build structure instructions for a given player/team

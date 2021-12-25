@@ -8,7 +8,8 @@ from custom_json import *
 # you have to be in src to run main.py successfully
 
 bot_folder = "../bots"
-bot_path = f"{bot_folder}/bot.py"
+bot1_path = f"{bot_folder}/bot.py"
+bot2_path = f"{bot_folder}/bot_bfs.py"
 save_path = "../replays"
 
 # Exact format of a custom map file:
@@ -26,7 +27,7 @@ if args.custom_map:
 else:
     map_settings = MapInfo(1078, 48, 48, MapUtil.x_sym, num_generators=3, num_cities=50)
 
-game = Game(bot_path, bot_path, map_settings)
+game = Game(bot1_path, bot2_path, map_settings)
 
 game.play_game()
 
