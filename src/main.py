@@ -1,4 +1,5 @@
 import json
+import argparse
 
 from structure import *
 from game import *
@@ -16,24 +17,17 @@ save_path = "../replays"
 # generators1 is a 1d array of (x,y) coordinates if there exist a generator for team 1 at (x,y)
 # generators2 is a 1d array of (x,y) coordinates if there exist a generator for team 2 at (x,y)
 
-map_path = "../maps/map-9034983.awap22"
+parser = argparse.ArgumentParser()
+parser.add_argument("-m","--custom_map", help="Custom map path [../maps/map-yourmapseed].", default=None)
+args = parser.parse_args()
 
-# Using custom map
-map_settings = MapInfo(custom_map_path=map_path)
-
-# No custom map (Random map)
-# map_settings = MapInfo(1078, 48, 48, MapUtil.x_sym, num_generators=3, num_cities=50)
+if args.custom_map:
+    map_settings = MapInfo(custom_map_path=args.custom_map)
+else:
+    map_settings = MapInfo(1078, 48, 48, MapUtil.x_sym, num_generators=3, num_cities=50)
 
 game = Game(bot_path, bot_path, map_settings)
 
-# for x in range(game.width):
-#     for y in range(game.height):
-#         if len(game.map[x][y].structures) > 0:
-#             print(x, y)
-
 game.play_game()
-# game.play_turn(0)
 
 game.save_replay(save_path)
-
-# print(CustomEncoder().encode(game.map[0][51].structures))

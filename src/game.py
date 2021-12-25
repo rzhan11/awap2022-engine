@@ -517,3 +517,5 @@ class Game:
                 "structure_type_ids": structure_type_ids
             }
             json.dump(obj, f, cls=CustomEncoder)
+
+        print(f"Saved replay file in {save_dir}/replay-{id}.awap22")
