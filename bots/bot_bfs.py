@@ -2,7 +2,6 @@ import sys
 sys.path.insert(1, "../src")
 
 import random
-from heapq import heapify, heappop, heappush
 
 from player import *
 from structure import *
@@ -18,15 +17,15 @@ class MyPlayer(Player):
 
 
 
-    def find_path(self, starts, dests, map):
+    def find_path(self, starts, dests, blocked_tiles):
         prev = {s: None for s in starts}
-        best_dist = {s: 0 for s in starts}
-        q = [(0, s) for s in starts]
-        while len(q) > 0:
-            cur_dist, cur_loc = heappop(q)
-            if cur_loc in dests:
-                path = [cur_loc]
-                cur = cur_loc
+        q = list(starts)
+        index = 0
+        while index < len(q):
+            state = q[index]
+            if state in dests:
+                path = [state]
+                cur = state
                 while cur not in starts:
                     cur = prev[cur]
                     path += [cur]
@@ -35,22 +34,20 @@ class MyPlayer(Player):
                 return path
 
             for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-                nx, ny = cur_loc[0] + dx, cur_loc[1] + dy
-                # in bounds and not blocked
+                nx, ny = state[0] + dx, state[1] + dy
+                # in bounds and not already visited
                 if not (0 <= nx < self.width and 0 <= ny < self.height):
                     continue
-                if map[nx][ny].structure is not None:
+                if (nx, ny) in prev:
                     continue
-                # is better distance
-                new_dist = cur_dist + map[nx][ny].passability
-                if (nx, ny) in best_dist and new_dist >= best_dist[(nx, ny)]:
+                if (nx, ny) in blocked_tiles:
                     continue
 
-                prev[(nx, ny)] = cur_loc
-                best_dist[(nx, ny)] = new_dist
-                heappush(q, (new_dist, (nx, ny)))
+                prev[(nx, ny)] = state
+                q += [(nx, ny)]
 
 
+            index += 1
 
         return None
 
@@ -74,17 +71,19 @@ class MyPlayer(Player):
                     if st.team == self.us and st.type == StructureType.GENERATOR:
                         gens += [(x, y)]
 
-        # find starting tiles
         my_tiles = set()
+        blocked_tiles = set()
         for x in range(self.width):
             for y in range(self.height):
                 st = map[x][y].structure
                 if st is not None:
                     if st.team == self.us:
                         my_tiles.add((x, y))
+                    else:
+                        blocked_tiles.add((x, y))
 
 
-        path = self.find_path(my_tiles, pops, map)
+        path = self.find_path(my_tiles, pops, blocked_tiles)
         if path is not None:
             for x, y in path:
                 if map[x][y].population > 0:
