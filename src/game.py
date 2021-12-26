@@ -441,9 +441,10 @@ class Game:
                 elif tow.team == Team.BLUE:
                     self.p2_state.money += score
 
-        # round money to the nearest 0.1 at end of each round
+        # round money and utility to the nearest 0.1 at end of each round
         for p_state in [self.p1_state, self.p2_state]:
             p_state.money = round(p_state.money, 1)
+            p_state.utility = round(p_state.utility, 1)
 
     '''
     Calculates utility for each team
