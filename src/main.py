@@ -5,6 +5,7 @@ import os
 from structure import *
 from game import *
 from custom_json import *
+from game_constants import GameConstants as GC
 
 # you have to be in src to run main.py successfully
 
@@ -31,7 +32,15 @@ if args.custom_map_seed:
         print(f"Map {custom_map} could not be found. Run python3 main.py -h for help. Exiting")
         exit(0)
 else:
-    map_settings = MapInfo(1078, 48, 48, MapUtil.x_sym, num_generators=3, num_cities=50)
+    # CUSTOMIZE YOUR MAP'S PASSABILITY:
+    # Not passing in obstacle_counts => each cell has independently random passability (original) 
+    obstacle_counts = {
+        # obstacle height : count of these
+        GC.MAX_PASS : 3,
+        GC.MAX_PASS - 1: 2,
+        GC.MAX_PASS - 2: 1
+    }
+    map_settings = MapInfo(1078, 48, 48, MapUtil.x_sym, num_generators=3, num_cities=50, passability=obstacle_counts)
 
 game = Game(bot1_path, bot2_path, map_settings)
 

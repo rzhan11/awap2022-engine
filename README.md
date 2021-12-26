@@ -11,6 +11,9 @@ Game Engine for AWAP 2022 - Wifi Rumble
 6. Upload the replay file that appears in `replays`
 7. Watch the magic Richard coded happen
 
+## Customize map passability
+1. In `main.py`, complete the `obstacle_counts` dictionary corresponding to the # of obstacles with some specified height for a gaussian-looking random map.
+
 ## Save and replay maps
 1. `cd` into `src`
 2. Run `python3 savemaps.py` to save the map of every replay, or `python3 savemaps.py -r YOURSEED` to save the map of the replay file with seed `YOURSEED`.

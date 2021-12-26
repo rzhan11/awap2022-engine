@@ -90,7 +90,7 @@ num_generators - number of initial generators for each team
 num_cities - number of cities
 '''
 class MapInfo():
-    def __init__(self, seed=0, width=48, height=48, sym=MapUtil.x_sym, num_generators=1, num_cities=10, custom_map_path=None):
+    def __init__(self, seed=0, width=48, height=48, sym=MapUtil.x_sym, num_generators=1, num_cities=10, custom_map_path=None, passability=None):
         self.seed = seed
         self.width = width
         self.height = height
@@ -98,6 +98,7 @@ class MapInfo():
         self.num_generators = num_generators
         self.num_cities = num_cities
         self.custom_map_path = custom_map_path
+        self.passability = passability
 
 
 import importlib
@@ -215,13 +216,9 @@ class Game:
                 self.generators[1] += [(x2, y2)]
 
             # adds passability
-            gauss = True
-            if gauss:
-                obstacles = {"hi":3,"med":2,"lo":1}
-                heights = {"hi":GC.MAX_PASS,"med":GC.MAX_PASS-1,"lo":GC.MAX_PASS-2}
-                for obstacle in obstacles:
-                    height = heights[obstacle]
-                    for _ in range(obstacles[obstacle]):
+            if map_info.passability:
+                for height in map_info.passability:
+                    for _ in range(map_info.passability[height]):
                         # choose random obstacle center
                         x1, y1 = random.randint(0, self.width - 1), random.randint(0, self.height - 1)
                         x2, y2 = map_info.sym(x1, y1, self.width, self.height)
@@ -234,6 +231,7 @@ class Game:
                                     h = round(height - math.sqrt(MapUtil.dist(x,y,col,row)),1)
                                     self.map[col][row].passability = max(self.map[col][row].passability,h)
             else:
+                # Original, independent random passability
                 for x in range(self.width):
                     for y in range(self.height):
                         x2, y2 = map_info.sym(x, y, self.width, self.height)
