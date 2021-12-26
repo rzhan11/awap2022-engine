@@ -28,15 +28,15 @@ passability - passability of this tile
 
 '''
 class Tile:
-    def __init__(self, x, y, population, structure, passability):
+    def __init__(self, x, y, passability, population, structure):
         self.x = x
         self.y = y
+        self.passability = passability
         self.population = population
         self.structure = structure
-        self.passability = passability
 
     def _copy(self):
-        return Tile(self.x, self.y, self.population, Structure.make_copy(self.structure), self.passability)
+        return Tile(self.x, self.y, self.passability, self.population, Structure.make_copy(self.structure))
 
 '''
 Contains many useful functions for map operations
@@ -195,7 +195,7 @@ class Game:
             assert(GC.MIN_HEIGHT <= self.height <= GC.MAX_HEIGHT)
 
             # Tile(self, x, y, population, structure, passability)
-            self.map = [[Tile(i, j, 0, None, 1) for j in range(self.height)] for i in range(self.width)]
+            self.map = [[Tile(i, j, 1, 0, None) for j in range(self.height)] for i in range(self.width)]
 
             # adds cities (tiles with population)
             for i in range(map_info.num_cities):
@@ -256,7 +256,7 @@ class Game:
             assert(GC.MIN_WIDTH <= self.width <= GC.MAX_WIDTH)
             assert(GC.MIN_HEIGHT <= self.height <= GC.MAX_HEIGHT)
 
-            self.map = [[Tile(i, j, info[i][j][1], None, info[i][j][0]) for j in range(self.height)] for i in range(self.width)]
+            self.map = [[Tile(i, j, info[i][j][0], info[i][j][1], None) for j in range(self.height)] for i in range(self.width)]
 
             self.generators = [[], []]
             for x,y in generators1:
@@ -341,6 +341,11 @@ class Game:
     Runs the game
     '''
     def play_game(self):
+        # save initial copy of money/utility history
+        self.money_history += [(self.p1_state.money, self.p2_state.money)]
+        self.utility_history += [(self.p1_state.utility, self.p2_state.utility)]
+
+
         for turn_num in range(GC.NUM_ROUNDS):
             self.play_turn(turn_num)
         # TODO: win condition - # players served
@@ -388,12 +393,6 @@ class Game:
     '''
     def play_turn(self, turn_num):
 
-        # update money, utility
-        self.update_resources()
-
-        # save money/utility info pre-turn
-        self.money_history += [(self.p1_state.money, self.p2_state.money)]
-
         # get player turns
         for p in [{"player":self.p1, "state":self.p1_state},
                 {"player":self.p2, "state":self.p2_state}]:
@@ -415,6 +414,10 @@ class Game:
         else:
             p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
             p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
+
+        # update money
+        self.update_resources()
+        self.money_history += [(self.p1_state.money, self.p2_state.money)]
 
         # calculate utility
         self.calculate_utility()
@@ -476,7 +479,7 @@ class Game:
                     self.p1_state.utility += score
                 elif tow.team == Team.BLUE:
                     self.p2_state.utility += score
-        
+
         for p_state in [self.p1_state, self.p2_state]:
             p_state.utility = round(p_state.utility, 1)
 

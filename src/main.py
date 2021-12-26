@@ -33,7 +33,7 @@ if args.custom_map_seed:
         exit(0)
 else:
     # CUSTOMIZE YOUR MAP'S PASSABILITY:
-    # Not passing in obstacle_counts => each cell has independently random passability (original) 
+    # Not passing in obstacle_counts => each cell has independently random passability (original)
     obstacle_counts = {
         # obstacle height : count of these
         GC.MAX_PASS : 3,
