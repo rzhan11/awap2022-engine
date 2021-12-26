@@ -215,12 +215,31 @@ class Game:
                 self.generators[1] += [(x2, y2)]
 
             # adds passability
-            for x in range(self.width):
-                for y in range(self.height):
-                    x2, y2 = map_info.sym(x, y, self.width, self.height)
-                    pval = random.randrange(GC.MIN_PASS, GC.MAX_PASS)
-                    self.map[x][y].passability = pval
-                    self.map[x2][y2].passability = pval
+            gauss = True
+            if gauss:
+                obstacles = {"hi":3,"med":2,"lo":1}
+                heights = {"hi":GC.MAX_PASS,"med":GC.MAX_PASS-1,"lo":GC.MAX_PASS-2}
+                for obstacle in obstacles:
+                    height = heights[obstacle]
+                    for _ in range(obstacles[obstacle]):
+                        # choose random obstacle center
+                        x1, y1 = random.randint(0, self.width - 1), random.randint(0, self.height - 1)
+                        x2, y2 = map_info.sym(x1, y1, self.width, self.height)
+                        print(f'INITIALIZING ONE WITH HEIGHT {height} at {x1,y1,x2,y2}')
+
+                        # perform bfs around center
+                        for x,y in [(x1,y1),(x2,y2)]:
+                            for row in range(max(0,y-height),min(y+height,self.height)):
+                                for col in range(max(0,x-height),min(x+height,self.width)):
+                                    h = round(height - math.sqrt(MapUtil.dist(x,y,col,row)),1)
+                                    self.map[col][row].passability = max(self.map[col][row].passability,h)
+            else:
+                for x in range(self.width):
+                    for y in range(self.height):
+                        x2, y2 = map_info.sym(x, y, self.width, self.height)
+                        pval = random.randrange(GC.MIN_PASS, GC.MAX_PASS)
+                        self.map[x][y].passability = pval
+                        self.map[x2][y2].passability = pval
 
         def init_custom_map():
             map_file = map_info.custom_map_path

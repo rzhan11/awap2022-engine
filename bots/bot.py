@@ -17,7 +17,6 @@ class MyPlayer(Player):
         return
 
 
-
     def find_path(self, starts, dests, map):
         prev = {s: None for s in starts}
         best_dist = {s: 0 for s in starts}
