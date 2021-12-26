@@ -180,7 +180,7 @@ class Game:
         Output:
         self.map = 2d array of tiles, where each tile contains (x, y, population, structure)
         self.generators = [list of generators for p1, list of generators for p2]
-        self.simple_map = 2d array of tuples containing (passability, population, structure) for each tile - used for replay information
+        self.simple_map = 2d array of tuples containing (passability, population) for each tile - used for replay information
 
         '''
 
@@ -272,7 +272,7 @@ class Game:
         else:
             init_random_map()
 
-        self.simple_map = [[[tile.passability, tile.population, Structure.make_copy(tile.structure)] for tile in col] for col in self.map]
+        self.simple_map = [[[tile.passability, tile.population] for tile in col] for col in self.map]
 
     '''
     Returns whether (i, j) is contained in the map
@@ -552,6 +552,10 @@ class Game:
             obj = {
                 "metadata": self.metadata,
                 "map": self.simple_map,
+                "generators": self.generators,
+                "game_info": {
+
+                },
                 "frame_changes": self.frame_changes,
                 "money_history": self.money_history,
                 "utility_history": self.utility_history,
