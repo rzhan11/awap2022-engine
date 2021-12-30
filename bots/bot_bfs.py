@@ -59,8 +59,6 @@ class MyPlayer(Player):
         self.width = len(map)
         self.height = len(map[0])
         
-        time.sleep(1)
-
         gens = []
         pops = []
         for x in range(self.width):
