@@ -18,6 +18,7 @@ class PlayerInfo:
         self.active = active # In the game (time limit exceeded = not active)
         self.money = money
         self.utility = utility
+        self.time_bank = GC.TIME_BANK
 
     def __str__(self):
         return f"[T: {self.team}, M: {self.money}, U: {self.utility}, A: {self.active}]"

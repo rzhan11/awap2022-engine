@@ -404,9 +404,12 @@ class Game:
                 t0 = time.time()
                 p["player"].play_turn(turn_num, self.map_copy(), p["state"])
                 tp = time.time()
-                if tp - t0 > GC.MAX_TURN_TIME:
+                elapsed = tp - t0
+                p["state"].time_bank -= elapsed
+                if p["state"].time_bank <= 0:
                     p["state"].active = False
-
+                if elapsed > GC.MAX_TURN_TIME:
+                    print(f"oof - that turn took {elapsed} seconds. You have {GC.TIME_BANK // 1000} total seconds to use across 250 rounds.")
         # update game state based on player actions
         if turn_num % 2 == 0: # alternate build priority (if two players try to build on the same tile)
             p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)

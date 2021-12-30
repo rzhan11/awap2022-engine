@@ -2,7 +2,6 @@ import sys
 sys.path.insert(1, "../src")
 
 import random
-import time
 
 from player import *
 from structure import *
@@ -16,45 +15,9 @@ class MyPlayer(Player):
 
         return
 
-
-
-    def find_path(self, starts, dests, blocked_tiles):
-        prev = {s: None for s in starts}
-        q = list(starts)
-        index = 0
-        while index < len(q):
-            state = q[index]
-            if state in dests:
-                path = [state]
-                cur = state
-                while cur not in starts:
-                    cur = prev[cur]
-                    path += [cur]
-
-                path = path[::-1]
-                return path
-
-            for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-                nx, ny = state[0] + dx, state[1] + dy
-                # in bounds and not already visited
-                if not (0 <= nx < self.width and 0 <= ny < self.height):
-                    continue
-                if (nx, ny) in prev:
-                    continue
-                if (nx, ny) in blocked_tiles:
-                    continue
-
-                prev[(nx, ny)] = state
-                q += [(nx, ny)]
-
-
-            index += 1
-
-        return None
-
-
     def play_turn(self, turn_num, map, my_info):
         print("turn", turn_num, my_info)
+
         self.us = my_info.team
         self.width = len(map)
         self.height = len(map[0])

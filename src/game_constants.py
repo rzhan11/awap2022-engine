@@ -20,4 +20,5 @@ class GameConstants:
 
     TOWER_RADIUS = 25
 
-    MAX_TURN_TIME = 5000
+    MAX_TURN_TIME = 5 # prints a notice after a turn runs for this long
+    TIME_BANK = 30 # 30 seconds
