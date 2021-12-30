@@ -5,10 +5,11 @@ todo: basic viewer
 '''
 
 import random
-import string
 import time
 import math
 import json
+import signal
+from contextlib import contextmanager
 
 from structure import *
 from player import *
@@ -108,6 +109,22 @@ def import_file(module_name, file_path):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+'''
+Class for timeout interruptions of turns
+'''
+class TimeoutException(Exception): pass
+
+@contextmanager
+def time_limit(seconds):
+    def signal_handler(signum, frame):
+        raise TimeoutException("Timed out!")
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
 
 
 '''
@@ -401,15 +418,20 @@ class Game:
                 p["player"]._to_build = []
 
                 # play turn
-                t0 = time.time()
-                p["player"].play_turn(turn_num, self.map_copy(), p["state"])
-                tp = time.time()
-                elapsed = tp - t0
-                p["state"].time_bank -= elapsed
-                if p["state"].time_bank <= 0:
+                try:
+                    t0 = time.time()
+                    with time_limit(int(p["state"].time_bank)):
+                        p["player"].play_turn(turn_num, self.map_copy(), p["state"])
+                    tp = time.time()
+                    elapsed = tp - t0
+                    p["state"].time_bank -= elapsed
+                    if p["state"].time_bank <= 0:
+                        raise TimeoutException()
+                    if elapsed > GC.MAX_TURN_TIME:
+                        print(f"oof - turn {turn_num} took {round(elapsed,3)} seconds. You have {round(p['state'].time_bank,3)} total seconds left to use across 250 rounds.")
+                except TimeoutException as _:
+                    print(f"Your turn timed out; you've used more than your total alotted {GC.TIME_BANK} seconds.")
                     p["state"].active = False
-                if elapsed > GC.MAX_TURN_TIME:
-                    print(f"oof - that turn took {elapsed} seconds. You have {GC.TIME_BANK // 1000} total seconds to use across 250 rounds.")
         # update game state based on player actions
         if turn_num % 2 == 0: # alternate build priority (if two players try to build on the same tile)
             p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)

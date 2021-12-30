@@ -58,6 +58,8 @@ class MyPlayer(Player):
         self.us = my_info.team
         self.width = len(map)
         self.height = len(map[0])
+        
+        time.sleep(1)
 
         gens = []
         pops = []
