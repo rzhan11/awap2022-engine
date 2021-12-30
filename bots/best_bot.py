@@ -18,17 +18,21 @@ class MyPlayer(Player):
     # track of throughout the game.
     def __init__(self):
         print("Init")
-        self.turn = 0
-
+        
     # Play your turn by building structures, spending your money, and
     # maximizing population reached!
     def play_turn(self, turn_num, map, my_info):
+        # perusing the map
         height, width = len(map), len(map[0])
-        tile = map[0][0]
-        print(tile.x, tile.y, tile.passability, tile.population)
-        structure = tile.structure
+        a_tile = map[0][0]
+        print(a_tile.x, a_tile.y, a_tile.passability, a_tile.population)
+        structure = a_tile.structure
         print(structure.x, structure.y, structure.team, structure.type)
         
+        # checking player stats
+        print(my_info.team, my_info.money)
+        print(f'Served {my_info.utility} last round')
+
         # building a (currently illegal) structure
         x, y = 0, 0
         self.build(StructureType.ROAD, x, y)
