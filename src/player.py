@@ -19,6 +19,7 @@ class PlayerInfo:
         self.money = money
         self.utility = utility
         self.time_bank = GC.TIME_BANK
+        self.bid = 0
 
     def __str__(self):
         return f"[T: {self.team}, M: {self.money}, U: {self.utility}, A: {self.active}]"
@@ -36,6 +37,9 @@ class Player:
     @abstractmethod
     def play_turn(self, turn_num, map, my_info):
         pass
+
+    def set_bid(self, bid):
+        self.bid = bid
 
     def build(self, struct_type, x, y):
         self._to_build += [(struct_type, x, y)]

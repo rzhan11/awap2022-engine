@@ -396,9 +396,8 @@ class Game:
         if rScore == bScore:
             # everything failed (basically impossible lmao)
             rScore, bScore = 1,0
-                
-        if rScore > bScore: self.winner = self.p1_name
-        else: self.winner = self.p2_name
+
+        self.winner = self.p1_name if rScore > bScore else self.p2_name
 
     '''
     Runs a single turn of the game
@@ -430,7 +429,8 @@ class Game:
         for p in [{"player":self.p1, "state":self.p1_state},
                 {"player":self.p2, "state":self.p2_state}]:
             if p["state"].active:
-                # reset build
+                # reset build + bid
+                p["player"].bid = 0
                 p["player"]._to_build = []
 
                 # play turn
@@ -449,10 +449,14 @@ class Game:
                     print(f"Your turn timed out; you've used more than your total alotted {GC.TIME_BANK} seconds.")
                     p["state"].active = False
         # update game state based on player actions
-        if turn_num % 2 == 0: # alternate build priority (if two players try to build on the same tile)
+        # give build priority based on bid
+        print(f'Round {turn_num} Bids: R : {self.p1.bid}, B : {self.p2.bid} - ', end='')
+        if self.p1.bid > self.p2.bid or self.p1.bid == self.p2.bid and turn_num % 2 == 0: # alternate build priority (if two players try to build on the same tile)
+            print(f"RED starts")
             p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
             p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
         else:
+            print(f"BLUE starts")
             p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
             p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
 
