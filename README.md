@@ -20,5 +20,5 @@ Game Engine for AWAP 2022 - Wifi Rumble
 3. Run `python3 main.py -m YOURSEED` to run a game on a saved map with seed `YOURSEED`.
 
 ## Clear maps and replays (ik its extra af)
-1. Go to `src` and give the cleaning files `rm_replays.sh` and `rm_maps.sh` permissions with `chmod +x [filename here]`.
+1. Go to `src` and give the cleaning files `rm_replays.sh` and `rm_maps.sh` permissions with `chmod +x [rm_replays.sh/rm_maps.sh]`.
 2. Clear the `../maps` and `../replays` folders, respectively, by running `./rm_maps.sh` and `./rm_replays.sh`.

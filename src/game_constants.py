@@ -14,7 +14,6 @@ class GameConstants:
 
     PLAYER_STARTING_MONEY = 250
     PLAYER_BASE_INCOME = 100
-    MAX_BUILD_COUNT = 1000
 
     NUM_ROUNDS = 250
 

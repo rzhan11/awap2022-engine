@@ -168,6 +168,7 @@ class Game:
         self.p2 = self.MyPlayer2()
         self.p1_state = PlayerInfo(Team.RED)
         self.p2_state = PlayerInfo(Team.BLUE)
+        self.winner = None
 
         # initializes map
         self.init_map(map_info)
@@ -180,6 +181,7 @@ class Game:
         self.frame_changes = []
         self.money_history = []
         self.utility_history = []
+
 
     '''
         Creates the initial map, either random or based on custom map
@@ -362,27 +364,41 @@ class Game:
         self.money_history += [(self.p1_state.money, self.p2_state.money)]
         self.utility_history += [(self.p1_state.utility, self.p2_state.utility)]
 
-
         for turn_num in range(GC.NUM_ROUNDS):
             self.play_turn(turn_num)
-        # TODO: win condition - # players served
-
+        
         # Win Condition: Returns True if Red wins
-
-        # Option 1: Just the final round
-        # for (x, y), towers in self.populated_tiles.items():
-        #     tile = self.map[x][y]
-        #     for tow in towers:
-        #         pop = tile.population / len(towers)
-        #         if tow.team == Team.RED:
-        #             self.p1_state.money += score
-        #             self.p1_state.utility += score
-        #         elif tow.team == Team.BLUE:
-        #             self.p2_state.money += score
-        #             self.p2_state.utility += score
-
-        # # Option 2: Cumulative Utility, people served over the years
-        # rScore, bScore = self.p1_state.utility, self.p2_state.utility
+        rScore, bScore = self.p1_state.utility, self.p2_state.utility
+        if rScore == bScore:
+            # number of towers
+            numStructures = {
+                Team.RED: {
+                    StructureType.TOWER : 0,
+                    StructureType.ROAD : 0
+                },
+                Team.BLUE: {
+                    StructureType.TOWER : 0,
+                    StructureType.ROAD : 0
+                }
+            }
+            for x in range(self.width):
+                for y in range(self.height):
+                    s = self.map[x][y].structure
+                    if s:
+                        numStructures[s.team][s.type] = numStructures[s.team].get(s.type,0) + 1
+            rScore, bScore = numStructures[Team.RED][StructureType.TOWER], numStructures[Team.BLUE][StructureType.TOWER]
+        if rScore == bScore:
+            # number of roads
+            rScore, bScore = numStructures[Team.RED][StructureType.ROAD], numStructures[Team.BLUE][StructureType.ROAD]
+        if rScore == bScore:
+            # final money
+            rScore, bScore = self.p1_state.money, self.p2_state.money
+        if rScore == bScore:
+            # everything failed (basically impossible lmao)
+            rScore, bScore = 1,0
+                
+        if rScore > bScore: self.winner = self.p1_name
+        else: self.winner = self.p2_name
 
     '''
     Runs a single turn of the game
@@ -569,6 +585,7 @@ class Game:
             "map_name": self.map_name,
             "num_frames": GC.NUM_ROUNDS,
             "version": "1.0.0",
+            "winner": self.winner
         }
 
         structure_type_ids = [(st.value.id, st.value.name) for st in StructureType]
