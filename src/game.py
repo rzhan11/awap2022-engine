@@ -181,6 +181,7 @@ class Game:
         self.frame_changes = []
         self.money_history = []
         self.utility_history = []
+        self.bid_history = []
 
 
     '''
@@ -460,6 +461,9 @@ class Game:
             p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
             p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
 
+        # update bid history
+        self.bid_history += [(self.p1.bid, self.p2.bid)]
+
         # update money
         self.update_resources()
         self.money_history += [(self.p1_state.money, self.p2_state.money)]
@@ -588,8 +592,7 @@ class Game:
             "p2_name": self.p2_name,
             "map_name": self.map_name,
             "num_frames": GC.NUM_ROUNDS,
-            "version": "1.0.0",
-            "winner": self.winner
+            "version": "1.0.0"
         }
 
         structure_type_ids = [(st.value.id, st.value.name) for st in StructureType]
@@ -605,7 +608,9 @@ class Game:
                 "frame_changes": self.frame_changes,
                 "money_history": self.money_history,
                 "utility_history": self.utility_history,
-                "structure_type_ids": structure_type_ids
+                "bid_history": self.bid_history,
+                "structure_type_ids": structure_type_ids,
+                "winner": self.winner
             }
             json.dump(obj, f, cls=CustomEncoder)
 

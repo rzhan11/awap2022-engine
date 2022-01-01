@@ -36,3 +36,6 @@ class MyPlayer(Player):
         # building a (currently illegal) structure
         x, y = 0, 0
         self.build(StructureType.ROAD, x, y)
+
+        # bidding 0 dollars to build first on every turn
+        self.set_bid(0)
