@@ -1,2 +1,10 @@
 replays/*
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 *.pyc
+=======
+*/__pycache__/*
+>>>>>>> Stashed changes
+=======
+*/__pycache__/*
+>>>>>>> Stashed changes
