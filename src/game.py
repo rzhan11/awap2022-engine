@@ -503,13 +503,19 @@ class Game:
         # TODO: test alternative money systems
         for (x, y), towers in self.populated_tiles.items():
             tile = self.map[x][y]
+            r, b = False, False
             for tow in towers:
-                score = tile.population / len(towers)
-                if tow.team == Team.RED:
-                    self.p1_state.money += score
-                elif tow.team == Team.BLUE:
-                    self.p2_state.money += score
-
+                if tow.team == Team.RED: r = True
+                elif tow.team == Team.BLUE: b = True
+            # toggle based allocation
+            if r and b:
+                self.p1_state.money += tile.population / 2
+                self.p2_state.money += tile.population / 2
+            elif r and not b:
+                self.p1_state.money += tile.population
+            elif not r and b:
+                self.p2_state.money += tile.population
+            
         # round money to the nearest 0.1 at end of each round
         for p_state in [self.p1_state, self.p2_state]:
             p_state.money = round(p_state.money, 1)
@@ -522,12 +528,18 @@ class Game:
         self.p2_state.utility = 0
         for (x, y), towers in self.populated_tiles.items():
             tile = self.map[x][y]
+            r, b = False, False
             for tow in towers:
-                score = tile.population / len(towers)
-                if tow.team == Team.RED:
-                    self.p1_state.utility += score
-                elif tow.team == Team.BLUE:
-                    self.p2_state.utility += score
+                if tow.team == Team.RED: r = True
+                elif tow.team == Team.BLUE: b = True
+            # toggle based allocation
+            if r and b:
+                self.p1_state.utility += tile.population / 2
+                self.p2_state.utility += tile.population / 2
+            elif r and not b:
+                self.p1_state.utility += tile.population
+            elif not r and b:
+                self.p2_state.utility += tile.population
 
         for p_state in [self.p1_state, self.p2_state]:
             p_state.utility = round(p_state.utility, 1)
