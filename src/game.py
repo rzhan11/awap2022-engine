@@ -367,7 +367,7 @@ class Game:
 
         for turn_num in range(GC.NUM_ROUNDS):
             self.play_turn(turn_num)
-        
+
         # Win Condition: Returns True if Red wins
         rScore, bScore = self.p1_state.utility, self.p2_state.utility
         if rScore == bScore:
@@ -609,14 +609,17 @@ class Game:
 
         structure_type_ids = [(st.value.id, st.value.name) for st in StructureType]
 
+        game_constants = {}
+        for k, v in GC.__dict__.items():
+            if k.isupper():
+                game_constants[k] = v
+
         with open(f"{save_dir}/replay-{id}.awap22", "w") as f:
             obj = {
                 "metadata": self.metadata,
                 "map": self.simple_map,
                 "generators": self.generators,
-                "game_info": {
-
-                },
+                "game_constants": game_constants,
                 "frame_changes": self.frame_changes,
                 "money_history": self.money_history,
                 "utility_history": self.utility_history,

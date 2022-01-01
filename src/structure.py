@@ -28,29 +28,29 @@ get_can_build() - returns if structure type can be built
 class StructureType(Enum):
 
     GENERATOR = StructureInfo(
-            id=0,
-            name="Generator",
-            cost=1000,
-            can_build=False
-        )
+        id=0,
+        name="Generator",
+        cost=1000,
+        can_build=False
+    )
     ROAD = StructureInfo(
-            id=1,
-            name="Road",
-            cost=10,
-            can_build=True
-        )
-    TRANSFORMER = StructureInfo(
-            id=2,
-            name="Transformer",
-            cost=50,
-            can_build=True
-        )
+        id=1,
+        name="Road",
+        cost=10,
+        can_build=True
+    )
     TOWER = StructureInfo(
-            id=3,
-            name="Tower",
-            cost=250,
-            can_build=True
-        )
+        id=2,
+        name="Tower",
+        cost=250,
+        can_build=True
+    )
+    # TRANSFORMER = StructureInfo(
+    #     id=3,
+    #     name="Transformer",
+    #     cost=50,
+    #     can_build=True
+    # )
 
     def get_base_cost(self):
         return self.value.cost
