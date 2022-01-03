@@ -364,6 +364,7 @@ class Game:
         # save initial copy of money/utility history
         self.money_history += [(self.p1_state.money, self.p2_state.money)]
         self.utility_history += [(self.p1_state.utility, self.p2_state.utility)]
+        self.bid_history += [(0, 0, -1)]
 
         for turn_num in range(GC.NUM_ROUNDS):
             self.play_turn(turn_num)
@@ -431,7 +432,7 @@ class Game:
                 {"player":self.p2, "state":self.p2_state}]:
             if p["state"].active:
                 # reset build + bid
-                p["player"].bid = 0
+                p["player"]._bid = 0
                 p["player"]._to_build = []
 
                 # play turn
@@ -466,18 +467,20 @@ class Game:
 
         # update game state based on player actions
         # give build priority based on bid
-        print(f'Round {turn_num} Bids: R : {self.p1.bid}, B : {self.p2.bid} - ', end='')
-        if self.p1.bid > self.p2.bid or self.p1.bid == self.p2.bid and turn_num % 2 == 0: # alternate build priority (if two players try to build on the same tile)
+        print(f'Round {turn_num} Bids: R : {self.p1._bid}, B : {self.p2._bid} - ', end='')
+        if self.p1._bid > self.p2._bid or self.p1._bid == self.p2._bid and turn_num % 2 == 0: # alternate build priority (if two players try to build on the same tile)
             print(f"RED starts")
+            bid_winner = 0
             p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
             p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
         else:
             print(f"BLUE starts")
+            bid_winner = 1
             p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
             p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
 
         # update bid history
-        self.bid_history += [(self.p1.bid, self.p2.bid)]
+        self.bid_history += [(self.p1._bid, self.p2._bid, bid_winner)]
 
         # update money
         self.update_resources()
@@ -530,7 +533,7 @@ class Game:
                 self.p1_state.money += tile.population
             elif not r and b:
                 self.p2_state.money += tile.population
-            
+
         # round money to the nearest 0.1 at end of each round
         for p_state in [self.p1_state, self.p2_state]:
             p_state.money = round(p_state.money, 1)

@@ -39,7 +39,7 @@ class Player:
         pass
 
     def set_bid(self, bid):
-        self.bid = bid
+        self._bid = bid
 
     def build(self, struct_type, x, y):
         self._to_build += [(struct_type, x, y)]
