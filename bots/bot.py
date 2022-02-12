@@ -57,6 +57,8 @@ class MyPlayer(Player):
     def play_turn(self, turn_num, map, my_info):
         print("turn", turn_num, my_info)
 
+        self.set_bid(turn_num % 2)
+
         self.us = my_info.team
         self.width = len(map)
         self.height = len(map[0])

@@ -263,29 +263,25 @@ class Game:
             map_file = map_info.custom_map_path
             map_data = json.load(open(map_file))
 
-            info = map_data["info"]
-            generators1 = map_data["generators1"]
-            generators2 = map_data["generators2"]
+            tile_info = map_data["tile_info"]
+            map_gens = map_data["generators"]
 
             # Parse custom map file name to name??
             id = ""
             self.map_name = f"custom{id}"
-            self.height = len(info)
-            self.width = len(info[0])
+            self.width = len(tile_info)
+            self.height = len(tile_info[0])
 
             assert(GC.MIN_WIDTH <= self.width <= GC.MAX_WIDTH)
             assert(GC.MIN_HEIGHT <= self.height <= GC.MAX_HEIGHT)
 
-            self.map = [[Tile(i, j, info[i][j][0], info[i][j][1], None) for j in range(self.height)] for i in range(self.width)]
+            self.map = [[Tile(i, j, tile_info[i][j][0], tile_info[i][j][1], None) for j in range(self.height)] for i in range(self.width)]
 
             self.generators = [[], []]
-            for x,y in generators1:
-                self.map[x][y].structure = Structure(StructureType.GENERATOR, x, y, Team.RED)
-                self.generators[0] += [(x, y)]
-
-            for x,y in generators2:
-                self.map[x][y].structure = Structure(StructureType.GENERATOR, x, y, Team.BLUE)
-                self.generators[1] += [(x, y)]
+            for t in [Team.RED, Team.BLUE]:
+                for x,y in map_gens[t.value]:
+                    self.map[x][y].structure = Structure(StructureType.GENERATOR, x, y, t)
+                    self.generators[t.value] += [(x, y)]
 
         if map_info.custom_map_path:
             init_custom_map()
@@ -373,21 +369,14 @@ class Game:
         rScore, bScore = self.p1_state.utility, self.p2_state.utility
         if rScore == bScore:
             # number of towers
-            numStructures = {
-                Team.RED: {
-                    StructureType.TOWER : 0,
-                    StructureType.ROAD : 0
-                },
-                Team.BLUE: {
-                    StructureType.TOWER : 0,
-                    StructureType.ROAD : 0
-                }
-            }
+            numStructures = { t: {st: 0 for st in StructureType} for t in [Team.RED, Team.BLUE] }
             for x in range(self.width):
                 for y in range(self.height):
                     s = self.map[x][y].structure
                     if s:
-                        numStructures[s.team][s.type] = numStructures[s.team].get(s.type,0) + 1
+                        print(s.team, s.type)
+                        numStructures[s.team][s.type] += 1
+                        # numStructures[s.team].get(s.type.get_id(), 0) + 1
             rScore, bScore = numStructures[Team.RED][StructureType.TOWER], numStructures[Team.BLUE][StructureType.TOWER]
         if rScore == bScore:
             # number of roads
@@ -426,6 +415,8 @@ class Game:
     Important note: when giving data to players, make a copy before giving to players, so they do not modify the actual game state
     '''
     def play_turn(self, turn_num):
+
+        self.turn = turn_num
 
         # get player turns
         for p in [{"player":self.p1, "state":self.p1_state},
@@ -632,7 +623,7 @@ class Game:
             if k.isupper():
                 game_constants[k] = v
 
-        with open(f"{save_dir}/replay-{id}.awap22", "w") as f:
+        with open(f"{save_dir}/replay-{id}.awap22r", "w") as f:
             obj = {
                 "metadata": self.metadata,
                 "map": self.simple_map,
@@ -647,4 +638,4 @@ class Game:
             }
             json.dump(obj, f, cls=CustomEncoder)
 
-        print(f"Saved replay file in {save_dir}/replay-{id}.awap22")
+        print(f"Saved replay file in {save_dir}/replay-{id}.awap22r")

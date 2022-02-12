@@ -58,7 +58,9 @@ class MyPlayer(Player):
         self.us = my_info.team
         self.width = len(map)
         self.height = len(map[0])
-        
+
+        self.set_bid(turn_num % 3)
+
         gens = []
         pops = []
         for x in range(self.width):

@@ -6,7 +6,7 @@ class GameConstants:
     MAX_HEIGHT = 64
     MOVE_DIRS = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
-    MIN_POP = 1
+    MIN_POP = 0
     MAX_POP = 10
 
     MIN_PASS = 1

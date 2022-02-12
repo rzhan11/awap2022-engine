@@ -58,6 +58,9 @@ class StructureType(Enum):
     def get_can_build(self):
         return self.value.can_build
 
+    def get_id(self):
+        return self.value.id
+
 
 '''
 Class containing information about a single structure

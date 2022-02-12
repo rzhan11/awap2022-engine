@@ -21,11 +21,11 @@ save_path = "../replays"
 # generators2 is a 1d array of (x,y) coordinates if there exist a generator for team 2 at (x,y)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-m","--custom_map_seed", help="Run with custom map (../maps/map-CUSTOM_MAP_SEED.awap22).", default=None)
+parser.add_argument("-m","--custom_map_name", help="Run with custom map (../maps/map-CUSTOM_MAP_NAME.awap22m).", default=None)
 args = parser.parse_args()
 
-if args.custom_map_seed:
-    custom_map = f'../maps/map-{args.custom_map_seed}.awap22'
+if args.custom_map_name:
+    custom_map = f'../maps/{args.custom_map_name}.awap22m'
     if os.path.isfile(custom_map):
         map_settings = MapInfo(custom_map_path=custom_map)
     else:
