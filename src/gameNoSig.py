@@ -1,3 +1,6 @@
+# Uncomment this and comment game.py to use this file instead of game.py
+# Use if signal handlers aren't working
+
 '''
 Game
 todo: add checks for connections
@@ -8,7 +11,7 @@ import random
 import time
 import math
 import json
-import signal
+# import signal
 from contextlib import contextmanager
 
 from structure import *
@@ -113,18 +116,18 @@ def import_file(module_name, file_path):
 '''
 Class for timeout interruptions of turns - re-implement later
 '''
-class TimeoutException(Exception): pass
+# class TimeoutException(Exception): pass
 
-@contextmanager
-def time_limit(seconds):
-    def signal_handler(signum, frame):
-        raise TimeoutException("Timed out!")
-    signal.signal(signal.SIGALRM, signal_handler)
-    signal.alarm(seconds)
-    try:
-        yield
-    finally:
-        signal.alarm(0)
+# @contextmanager
+# def time_limit(seconds):
+#     def signal_handler(signum, frame):
+#         raise TimeoutException("Timed out!")
+#     signal.signal(signal.SIGALRM, signal_handler)
+#     signal.alarm(seconds)
+#     try:
+#         yield
+#     finally:
+#         signal.alarm(0)
 
 
 '''
@@ -263,25 +266,29 @@ class Game:
             map_file = map_info.custom_map_path
             map_data = json.load(open(map_file))
 
-            tile_info = map_data["tile_info"]
-            map_gens = map_data["generators"]
+            info = map_data["info"]
+            generators1 = map_data["generators1"]
+            generators2 = map_data["generators2"]
 
             # Parse custom map file name to name??
             id = ""
             self.map_name = f"custom{id}"
-            self.width = len(tile_info)
-            self.height = len(tile_info[0])
+            self.height = len(info)
+            self.width = len(info[0])
 
             assert(GC.MIN_WIDTH <= self.width <= GC.MAX_WIDTH)
             assert(GC.MIN_HEIGHT <= self.height <= GC.MAX_HEIGHT)
 
-            self.map = [[Tile(i, j, tile_info[i][j][0], tile_info[i][j][1], None) for j in range(self.height)] for i in range(self.width)]
+            self.map = [[Tile(i, j, info[i][j][0], info[i][j][1], None) for j in range(self.height)] for i in range(self.width)]
 
             self.generators = [[], []]
-            for t in [Team.RED, Team.BLUE]:
-                for x,y in map_gens[t.value]:
-                    self.map[x][y].structure = Structure(StructureType.GENERATOR, x, y, t)
-                    self.generators[t.value] += [(x, y)]
+            for x,y in generators1:
+                self.map[x][y].structure = Structure(StructureType.GENERATOR, x, y, Team.RED)
+                self.generators[0] += [(x, y)]
+
+            for x,y in generators2:
+                self.map[x][y].structure = Structure(StructureType.GENERATOR, x, y, Team.BLUE)
+                self.generators[1] += [(x, y)]
 
         if map_info.custom_map_path:
             init_custom_map()
@@ -369,14 +376,21 @@ class Game:
         rScore, bScore = self.p1_state.utility, self.p2_state.utility
         if rScore == bScore:
             # number of towers
-            numStructures = { t: {st: 0 for st in StructureType} for t in [Team.RED, Team.BLUE] }
+            numStructures = {
+                Team.RED: {
+                    StructureType.TOWER : 0,
+                    StructureType.ROAD : 0
+                },
+                Team.BLUE: {
+                    StructureType.TOWER : 0,
+                    StructureType.ROAD : 0
+                }
+            }
             for x in range(self.width):
                 for y in range(self.height):
                     s = self.map[x][y].structure
                     if s:
-                        print(s.team, s.type)
-                        numStructures[s.team][s.type] += 1
-                        # numStructures[s.team].get(s.type.get_id(), 0) + 1
+                        numStructures[s.team][s.type] = numStructures[s.team].get(s.type,0) + 1
             rScore, bScore = numStructures[Team.RED][StructureType.TOWER], numStructures[Team.BLUE][StructureType.TOWER]
         if rScore == bScore:
             # number of roads
@@ -416,8 +430,6 @@ class Game:
     '''
     def play_turn(self, turn_num):
 
-        self.turn = turn_num
-
         # get player turns
         for p in [{"player":self.p1, "state":self.p1_state},
                 {"player":self.p2, "state":self.p2_state}]:
@@ -429,31 +441,31 @@ class Game:
                 # play turn
 
                 # temporary time handler, replace with signal handler later
-                # t0 = time.time()
-                # p["player"].play_turn(turn_num, self.map_copy(), p["state"])
-                # tp = time.time()
-                # elapsed = tp - t0
-                # p["state"].time_bank -= elapsed
-                # if p["state"].time_bank <= 0:
-                #     print(f"Your turn timed out; you've used more than your total alotted {GC.TIME_BANK} seconds.")
-                #     p["state"].active = False
-                # elif elapsed > GC.MAX_TURN_TIME:
-                #     print(f"oof - turn {turn_num} took {round(elapsed,3)} seconds. You have {round(p['state'].time_bank,3)} total seconds left to use across 250 rounds.")
-
-                try:
-                    t0 = time.time()
-                    with time_limit(int(p["state"].time_bank)):
-                        p["player"].play_turn(turn_num, self.map_copy(), p["state"])
-                    tp = time.time()
-                    elapsed = tp - t0
-                    p["state"].time_bank -= elapsed
-                    if p["state"].time_bank <= 0:
-                        raise TimeoutException()
-                    if elapsed > GC.WARNING_TURN_TIME:
-                        print(f"oof - turn {turn_num} took {round(elapsed,3)} seconds. You have {round(p['state'].time_bank,3)} total seconds left to use across 250 rounds.")
-                except TimeoutException as _:
+                t0 = time.time()
+                p["player"].play_turn(turn_num, self.map_copy(), p["state"])
+                tp = time.time()
+                elapsed = tp - t0
+                p["state"].time_bank -= elapsed
+                if p["state"].time_bank <= 0:
                     print(f"Your turn timed out; you've used more than your total alotted {GC.TIME_BANK} seconds.")
                     p["state"].active = False
+                elif elapsed > GC.WARNING_TURN_TIME:
+                    print(f"oof - turn {turn_num} took {round(elapsed,3)} seconds. You have {round(p['state'].time_bank,3)} total seconds left to use across 250 rounds.")
+
+                # try:
+                #     t0 = time.time()
+                #     with time_limit(int(p["state"].time_bank)):
+                #         p["player"].play_turn(turn_num, self.map_copy(), p["state"])
+                #     tp = time.time()
+                #     elapsed = tp - t0
+                #     p["state"].time_bank -= elapsed
+                #     if p["state"].time_bank <= 0:
+                #         raise TimeoutException()
+                #     if elapsed > GC.WARNING_TURN_TIME:
+                #         print(f"oof - turn {turn_num} took {round(elapsed,3)} seconds. You have {round(p['state'].time_bank,3)} total seconds left to use across 250 rounds.")
+                # except TimeoutException as _:
+                #     print(f"Your turn timed out; you've used more than your total alotted {GC.TIME_BANK} seconds.")
+                #     p["state"].active = False
 
 
         # update game state based on player actions
@@ -623,7 +635,7 @@ class Game:
             if k.isupper():
                 game_constants[k] = v
 
-        with open(f"{save_dir}/replay-{id}.awap22r", "w") as f:
+        with open(f"{save_dir}/replay-{id}.awap22", "w") as f:
             obj = {
                 "metadata": self.metadata,
                 "map": self.simple_map,
@@ -638,4 +650,4 @@ class Game:
             }
             json.dump(obj, f, cls=CustomEncoder)
 
-        print(f"Saved replay file in {save_dir}/replay-{id}.awap22r")
+        print(f"Saved replay file in {save_dir}/replay-{id}.awap22")

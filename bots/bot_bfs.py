@@ -55,6 +55,7 @@ class MyPlayer(Player):
 
     def play_turn(self, turn_num, map, my_info):
         print("turn", turn_num, my_info)
+        # Test Timer: if turn_num % 5 == 0: time.sleep(5)
         self.us = my_info.team
         self.width = len(map)
         self.height = len(map[0])
