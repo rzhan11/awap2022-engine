@@ -1,5 +1,4 @@
 import sys
-# sys.path.insert(1, "../src")
 
 import random
 
@@ -16,7 +15,7 @@ class MyPlayer(Player):
         return
 
 
-    def play_turn(self, turn_num, map, my_info):
+    def play_turn(self, turn_num, map, player_info):
 
 
         return

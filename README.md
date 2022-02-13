@@ -4,7 +4,7 @@ This is the AWAP 2022 game engine.
 
 Sample bots can be found in the `bots/` folder. Competitors should also develop their bots in this folder.
 
-## Requirements
+### Requirements
 * [Python 3](https://www.python.org/downloads/) (Developed/tested in **3.8.9**, other versions probably work)
 
 ## Project Structure
@@ -29,5 +29,5 @@ Sample bots can be found in the `bots/` folder. Competitors should also develop 
     * Games can also be run with CLI arguments (`python3 run_game.py -h` for details)
 
 ### View match replay
-* Open the viewer on your browser (VIEWER_URL or [install locally](https://github.com/rzhan11/cell-towers-viewer))
+* Open the viewer ([from website - NOT UP YET](VIEWER_URL) or [install locally](https://github.com/rzhan11/cell-towers-viewer))
 * Upload a replay file (match replays are saved in the `replays/` folder)

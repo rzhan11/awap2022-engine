@@ -92,6 +92,9 @@ class Structure:
     def __str__(self):
         return f"[{self.type.name} {str(self.team)} {(self.x, self.y)}]"
 
+    def __repr__(self):
+        return f"[{self.type.name} {str(self.team)} {(self.x, self.y)}]"
+
 
 #
 #

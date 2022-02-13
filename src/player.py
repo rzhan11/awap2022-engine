@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 
 
 class Team(Enum):
-    NEUTRAL = -1
     RED = 0
     BLUE = 1
 
@@ -35,7 +34,7 @@ class Player:
         pass
 
     @abstractmethod
-    def play_turn(self, turn_num, map, my_info):
+    def play_turn(self, turn_num, map, player_info):
         pass
 
     def set_bid(self, bid):

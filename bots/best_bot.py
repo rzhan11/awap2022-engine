@@ -20,7 +20,7 @@ class MyPlayer(Player):
 
     # Play your turn by building structures, spending your money, and
     # maximizing population reached!
-    def play_turn(self, turn_num, map, my_info):
+    def play_turn(self, turn_num, map, player_info):
         # perusing the map
         height, width = len(map), len(map[0])
         a_tile = map[0][0]
@@ -29,8 +29,8 @@ class MyPlayer(Player):
         print(structure.x, structure.y, structure.team, structure.type)
 
         # checking player stats
-        print(my_info.team, my_info.money)
-        print(f'Served {my_info.utility} last round')
+        print(player_info.team, player_info.money)
+        print(f'Served {player_info.utility} last round')
 
         # building a (currently illegal) structure
         x, y = 0, 0

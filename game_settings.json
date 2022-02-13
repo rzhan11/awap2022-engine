@@ -1,5 +1,5 @@
 {
-  "p1": "bot",
-  "p2": "bot_bfs",
+  "p1": "template_bot",
+  "p2": "random_bot",
   "map": "default-map"
 }

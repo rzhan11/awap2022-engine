@@ -639,3 +639,4 @@ class Game:
             json.dump(obj, f, cls=CustomEncoder)
 
         print(f"\nSaved replay file in {save_dir}/replay-{id}.awap22r")
+        print(f"Match ended: '{self.p1_name}' vs '{self.p2_name}' on '{self.map_name}'")

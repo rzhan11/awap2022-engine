@@ -52,10 +52,10 @@ class MyPlayer(Player):
         return None
 
 
-    def play_turn(self, turn_num, map, my_info):
-        print("turn", turn_num, my_info)
+    def play_turn(self, turn_num, map, player_info):
+        print("turn", turn_num, player_info)
         # Test Timer: if turn_num % 5 == 0: time.sleep(5)
-        self.us = my_info.team
+        self.us = player_info.team
         self.width = len(map)
         self.height = len(map[0])
 
