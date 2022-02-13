@@ -38,7 +38,7 @@ class MyPlayer(Player):
                         my_structs.append(st)
 
         # call helper method to build randomly
-        self.try_random_build(map, player_info)
+        self.try_random_build(map, my_structs, player_info)
 
         # randomly bid 1 or 2
         self.set_bid(random.randint(1, 2))
@@ -47,7 +47,7 @@ class MyPlayer(Player):
 
 
     ''' Helper method for trying to build a random structure'''
-    def try_random_build(self, map, player_info):
+    def try_random_build(self, map, my_structs, player_info):
         # choose a type of structure to build
         # build a tower for every 4 roads
         if len(my_structs) % 5 == 4:
