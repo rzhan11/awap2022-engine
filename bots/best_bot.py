@@ -4,13 +4,12 @@
 # to the AWAP website to run it against other bots.
 
 import sys
-sys.path.insert(1, "../src")
 
 import random
 
-from player import *
-from structure import *
-from game_constants import GameConstants as GC
+from src.player import *
+from src.structure import *
+from src.game_constants import GameConstants as GC
 
 class MyPlayer(Player):
 
@@ -18,7 +17,7 @@ class MyPlayer(Player):
     # track of throughout the game.
     def __init__(self):
         print("Init")
-        
+
     # Play your turn by building structures, spending your money, and
     # maximizing population reached!
     def play_turn(self, turn_num, map, my_info):
@@ -28,7 +27,7 @@ class MyPlayer(Player):
         print(a_tile.x, a_tile.y, a_tile.passability, a_tile.population)
         structure = a_tile.structure
         print(structure.x, structure.y, structure.team, structure.type)
-        
+
         # checking player stats
         print(my_info.team, my_info.money)
         print(f'Served {my_info.utility} last round')

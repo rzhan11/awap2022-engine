@@ -1,5 +1,5 @@
-from structure import *
-from game_constants import GameConstants as GC
+from .structure import *
+from .game_constants import GameConstants as GC
 
 from enum import Enum
 from abc import ABC, abstractmethod

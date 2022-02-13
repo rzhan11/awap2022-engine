@@ -1,24 +1,33 @@
 # AWAP 2022 Game Engine
 
-Game Engine for AWAP 2022 - Wifi Rumble
+This is the AWAP 2022 game engine.
+
+Sample bots can be found in the `bots/` folder. Competitors should also develop their bots in this folder.
+
+## Requirements
+* [Python 3](https://www.python.org/downloads/) (Developed/tested in **3.8.9**, other versions probably work)
+
+## Project Structure
+* `README.md` - This file
+* `run_game.py` - Runs a game between two players on a map
+* `game_settings.json` - Contains game settings used in `run_game.py` (specifies players and map)
+* `bots/` - Contains player source code
+* `maps/` - Contains maps (download your custom maps to here)
+* `replays/` - Contains match replays
+* `src/` - Contains the engine source code
+
 
 ## How-to:
-1. Clone this repo
-2. `cd` into this repo
-3. `cd` into `src`
-4. Run `python3 main.py`
-5. Open the viewer on your browser
-6. Upload the replay file that appears in `replays`
-7. Watch the magic Richard coded happen
 
-## Customize map passability
-1. In `main.py`, complete the `obstacle_counts` dictionary corresponding to the # of obstacles with some specified height for a gaussian-looking random map.
+### Download
+* `git clone https://github.com/rzhan11/cell-towers.git` - Downloads the repo
 
-## Save and replay maps
-1. `cd` into `src`
-2. Run `python3 savemaps.py` to save the map of every replay, or `python3 savemaps.py -r YOURSEED` to save the map of the replay file with seed `YOURSEED`.
-3. Run `python3 main.py -m YOURSEED` to run a game on a saved map with seed `YOURSEED`.
+### Run a match
+* `cd` into this repo
+* `python3 run_game.py` - Runs the game
+    * Specify players/maps by modifying `game_settings.json`
+    * Games can also be run with CLI arguments (`python3 run_game.py -h` for details)
 
-## Clear maps and replays (ik its extra af)
-1. Go to `src` and give the cleaning files `rm_replays.sh` and `rm_maps.sh` permissions with `chmod +x [rm_replays.sh/rm_maps.sh]`.
-2. Clear the `../maps` and `../replays` folders, respectively, by running `./rm_maps.sh` and `./rm_replays.sh`.
+### View match replay
+* Open the viewer on your browser (VIEWER_URL or [install locally](https://github.com/rzhan11/cell-towers-viewer))
+* Upload a replay file (match replays are saved in the `replays/` folder)

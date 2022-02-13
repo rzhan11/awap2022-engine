@@ -11,10 +11,10 @@ import json
 import signal
 from contextlib import contextmanager
 
-from structure import *
-from player import *
-from game_constants import GameConstants as GC
-from custom_json import CustomEncoder
+from .structure import *
+from .player import *
+from .game_constants import GameConstants as GC
+from .custom_json import CustomEncoder
 
 
 '''
@@ -102,9 +102,9 @@ class MapInfo():
         self.passability = passability
 
 
-import importlib
+import importlib.util
 def import_file(module_name, file_path):
-    print(module_name, file_path)
+    print("Loading", module_name, file_path)
     spec = importlib.util.spec_from_file_location(module_name, file_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -638,4 +638,4 @@ class Game:
             }
             json.dump(obj, f, cls=CustomEncoder)
 
-        print(f"Saved replay file in {save_dir}/replay-{id}.awap22r")
+        print(f"\nSaved replay file in {save_dir}/replay-{id}.awap22r")

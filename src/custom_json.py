@@ -1,7 +1,7 @@
 import json
-from structure import *
-import game
-from player import *
+
+from .structure import *
+from .player import *
 
 '''
 Used for custom JSON encodings of our classes

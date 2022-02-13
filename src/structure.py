@@ -1,5 +1,5 @@
 from enum import Enum
-from player import *
+from .player import *
 
 class StructureInfo:
     def __init__(self, id, name, cost, can_build):

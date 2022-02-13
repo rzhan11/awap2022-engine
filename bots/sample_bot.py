@@ -1,11 +1,11 @@
 import sys
-sys.path.insert(1, "../src")
+# sys.path.insert(1, "../src")
 
 import random
 
-from player import *
-from structure import *
-from game_constants import GameConstants as GC
+from src.player import *
+from src.structure import *
+from src.game_constants import GameConstants as GC
 
 class MyPlayer(Player):
 
