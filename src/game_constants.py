@@ -2,8 +2,8 @@ class GameConstants:
 
     MIN_WIDTH = 32
     MIN_HEIGHT = 32
-    MAX_WIDTH = 64
-    MAX_HEIGHT = 64
+    MAX_WIDTH = 48
+    MAX_HEIGHT = 48
     MOVE_DIRS = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
     MIN_POP = 0

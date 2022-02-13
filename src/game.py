@@ -374,7 +374,6 @@ class Game:
                 for y in range(self.height):
                     s = self.map[x][y].structure
                     if s:
-                        print(s.team, s.type)
                         numStructures[s.team][s.type] += 1
                         # numStructures[s.team].get(s.type.get_id(), 0) + 1
             rScore, bScore = numStructures[Team.RED][StructureType.TOWER], numStructures[Team.BLUE][StructureType.TOWER]

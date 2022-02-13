@@ -21,8 +21,8 @@ with open("game_settings.json", "r") as f:
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-m","--map_name", help="Run with custom map (./maps/map-CUSTOM_MAP_NAME.awap22m).", default=None)
-parser.add_argument("-p1","--p1_bot_name", help="Path to p1 bot (./bots/P1_BOT_NAME.py).", default=None)
-parser.add_argument("-p2","--p2_bot_name", help="Path to p2 bot (./bots/P2_BOT_NAME.py).", default=None)
+parser.add_argument("-p1","--p1_bot_name", help="Player 1 bot name (./bots/P1_BOT_NAME.py).", default=None)
+parser.add_argument("-p2","--p2_bot_name", help="Player 2 bot name (./bots/P2_BOT_NAME.py).", default=None)
 args = parser.parse_args()
 
 if args.map_name:
