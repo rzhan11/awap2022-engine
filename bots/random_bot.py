@@ -78,5 +78,6 @@ class MyPlayer(Player):
                                 valid_tiles.append((nx, ny))
 
         # choose a random tile to build on
-        tx, ty = random.choice(valid_tiles)
-        self.build(build_type, tx, ty)
+        if(len(valid_tiles) > 0):
+            tx, ty = random.choice(valid_tiles)
+            self.build(build_type, tx, ty)
