@@ -64,12 +64,12 @@ class MapUtil:
     '''
     Returns a list of tuples containing all of the (dx, dy) pairs within rad2 distance
     '''
-    def get_diffs(rad2):
-        max_rad = int(math.sqrt(rad2))
+    def get_diffs(radius):
+        max_rad = int(radius)
         diffs = []
         for di in range(-max_rad, max_rad + 1):
             for dj in range(-max_rad, max_rad + 1):
-                if di * di + dj * dj <= rad2:
+                if di * di + dj * dj <= pow(radius, 2):
                     diffs += [(di, dj)]
         return diffs
 
@@ -442,7 +442,7 @@ class Game:
                 try:
                     t0 = time.time()
                     with time_limit(int(p["state"].time_bank)):
-                        p["player"].play_turn(turn_num, self.map_copy(), p["state"])
+                        p["player"].play_turn(turn_num, self.map_copy(), p["state"]._copy())
                     tp = time.time()
                     elapsed = tp - t0
                     p["state"].time_bank -= elapsed
@@ -603,7 +603,7 @@ class Game:
     '''
     Saves replay information to a file (in JSON format)
     '''
-    def save_replay(self, save_dir):
+    def save_replay(self, save_dir, save_file_name):
         random.seed()
         id = random.randint(1e6, 1e7 - 1)
 
@@ -622,7 +622,12 @@ class Game:
             if k.isupper():
                 game_constants[k] = v
 
-        with open(f"{save_dir}/replay-{id}.awap22r", "w") as f:
+        if save_file_name is None:
+            save_file_name = f"replay-{id}"
+
+        save_file_path = f"{save_dir}/{save_file_name}.awap22r"
+
+        with open(save_file_path, "w") as f:
             obj = {
                 "metadata": self.metadata,
                 "map": self.simple_map,
@@ -637,5 +642,5 @@ class Game:
             }
             json.dump(obj, f, cls=CustomEncoder)
 
-        print(f"\nSaved replay file in {save_dir}/replay-{id}.awap22r")
+        print(f"\nSaved replay file in {save_file_path}")
         print(f"Match ended: '{self.p1_name}' vs '{self.p2_name}' on '{self.map_name}'")

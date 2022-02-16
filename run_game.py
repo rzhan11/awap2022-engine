@@ -23,6 +23,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-m","--map_name", help="Run with custom map (./maps/map-CUSTOM_MAP_NAME.awap22m).", default=None)
 parser.add_argument("-p1","--p1_bot_name", help="Player 1 bot name (./bots/P1_BOT_NAME.py).", default=None)
 parser.add_argument("-p2","--p2_bot_name", help="Player 2 bot name (./bots/P2_BOT_NAME.py).", default=None)
+parser.add_argument("-replay","--replay_file_name", help="Replay file name", default=None)
 args = parser.parse_args()
 
 if args.map_name:
@@ -31,6 +32,8 @@ if args.p1_bot_name:
     game_settings["p1"] = args.p1_bot_name
 if args.p2_bot_name:
     game_settings["p2"] = args.p2_bot_name
+if args.replay_file_name:
+    game_settings["replay"] = args.replay_file_name
 
 # if args.custom_map_name:
 map_path = f'./maps/{game_settings["map"]}.awap22m'
@@ -48,4 +51,4 @@ game = Game(bot1_path, bot2_path, map_settings)
 
 game.play_game()
 
-game.save_replay(save_path)
+game.save_replay(save_path, game_settings["replay"])
