@@ -10,6 +10,7 @@ import math
 import json
 import signal
 from contextlib import contextmanager
+import os
 
 from .structure import *
 from .player import *
@@ -267,8 +268,7 @@ class Game:
             map_gens = map_data["generators"]
 
             # Parse custom map file name to name??
-            id = ""
-            self.map_name = f"custom{id}"
+            self.map_name = os.path.basename(map_info.custom_map_path)
             self.width = len(tile_info)
             self.height = len(tile_info[0])
 
