@@ -125,7 +125,6 @@ if os.name != 'nt':
             raise TimeoutException("Timed out!")
         signal.signal(signal.SIGALRM, signal_handler)
         signal.setitimer(signal.ITIMER_REAL, seconds)
-        # signal.alarm(seconds)
         try:
             yield
         finally:
@@ -165,14 +164,40 @@ class Game:
         # initializes players
         self.p1_name = p1_path
         self.p2_name = p2_path
-
+        
         self.MyPlayer1 = import_file("Player1", p1_path).MyPlayer
         self.MyPlayer2 = import_file("Player2", p2_path).MyPlayer
-
-        self.p1 = self.MyPlayer1()
-        self.p2 = self.MyPlayer2()
+        self.PlayerDQ = import_file("PlayerDQ", "./bots/dq_bot.py").MyPlayer
+        
         self.p1_state = PlayerInfo(Team.RED)
         self.p2_state = PlayerInfo(Team.BLUE)
+        
+        for player, state in [(self.MyPlayer1, self.p1_state),(self.MyPlayer2, self.p2_state)]:
+            try:
+                if os.name == "nt": # Windows
+                    t0 = time.time()
+                    if state == self.p1_state: self.p1 = player()
+                    else: self.p2 = player()
+                    t1 = time.time()
+                    penalty = t1 - t0
+                    state.time_bank.time_left -= penalty
+                    if t1 - t0 > GC.INIT_TIME_LIMIT:
+                        raise TimeoutException
+                else:
+                    with time_limit(GC.INIT_TIME_LIMIT):
+                        if state == self.p1_state: self.p1 = player()
+                        else: self.p2 = player()
+                    state.time_bank.time_left -= GC.INIT_TIME_LIMIT
+                    penalty = GC.INIT_TIME_LIMIT
+                state.time_bank.time_left -= penalty
+            except TimeoutException as _:
+                state.time_bank.windows_warning(GC.INIT_TIME_LIMIT)
+                print(f"[INIT TIMEOUT] {state.team}'s bot used >{GC.INIT_TIME_LIMIT} seconds to initialize; it will not play.")
+                state.dq = True
+                if state == self.p1_state:
+                    self.p1 = self.PlayerDQ()
+                else: self.p2 = self.PlayerDQ()
+        
         self.winner = None
 
         # initializes map
@@ -365,7 +390,7 @@ class Game:
         # save initial copy of money/utility history
         self.money_history += [(self.p1_state.money, self.p2_state.money)]
         self.utility_history += [(self.p1_state.utility, self.p2_state.utility)]
-        self.time_bank_history += [(self.p1_state.time_bank, self.p2_state.time_bank)]
+        self.time_bank_history += [(self.p1_state.time_bank.time_left, self.p2_state.time_bank.time_left)]
         self.bid_history += [(0, 0, -1)]
 
         for turn_num in range(GC.NUM_ROUNDS):
@@ -426,37 +451,41 @@ class Game:
         self.turn = turn_num
 
         # get player turns
-        for p in [{"player":self.p1, "state":self.p1_state},
-                {"player":self.p2, "state":self.p2_state}]:
+        for player, state in [(self.p1, self.p1_state),(self.p2, self.p2_state)]:
+            # reset build + bid
+            player._bid = 0
+            player._to_build = []
+
+            # check for timeout end            
             limit = GC.TURN_TIME_LIMIT
-            if not p["state"].active and turn_num - p["state"].paused_at + 1 >= GC.TIMEOUT:
+            state.time_bank.set_turn(self.turn)
+            if state.newly_active():
                 limit *= GC.TIMEOUT
-                p["state"].active = True
                 print(f"[TIMEOUT END] {self.p1_state.team} resumes turns.")
-
-            if p["state"].active:
-                # reset build + bid
-                p["player"]._bid = 0
-                p["player"]._to_build = []
-
+            if state.active():
                 # play turn
                 try:
                     if os.name == "nt": # Windows
                         t0 = time.time()
-                        p["player"].play_turn(turn_num, self.map_copy(), p["state"]._copy())
+                        player.play_turn(turn_num, self.map_copy(),state._copy())
                         t1 = time.time()
-                        p["state"].time_bank -= (t1 - t0)
+                        penalty = t1 - t0
                         if t1 - t0 > limit:
                             raise TimeoutException
                     else:
                         with time_limit(limit):
-                            p["player"].play_turn(turn_num, self.map_copy(), p["state"]._copy())
-                        p["state"].time_bank -= limit
+                            player.play_turn(turn_num, self.map_copy(),state._copy())
+                        penalty = limit
+                    state.time_bank.time_left -= penalty
                 except TimeoutException as _:
-                    print(f"[{GC.TIMEOUT} ROUND TIMEOUT START] You used >{limit} seconds in a turn.")
-                    p["state"].paused_at = turn_num
-                    p["state"].active = False
-
+                    state.time_bank.windows_warning(limit)
+                    print(f"[{GC.TIMEOUT} ROUND TIMEOUT START] {state.team} used >{limit} seconds in a turn.")
+                    state.time_bank.paused_at = turn_num
+            else:
+                if state.dq:
+                    print(f"{state.team} turn skipped - DQ'ed")
+                else:
+                    print(f"{state.team} turn skipped - in timeout")
         # update game state based on player actions
         # give build priority based on bid
         print(f'Round {turn_num} Bids: R : {self.p1._bid}, B : {self.p2._bid} - ', end='')
@@ -472,7 +501,7 @@ class Game:
             p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
 
         # update time bank history
-        self.time_bank_history += [(self.p1_state.time_bank, self.p2_state.time_bank)]
+        self.time_bank_history += [(self.p1_state.time_bank.time_left, self.p2_state.time_bank.time_left)]
 
         # update bid history
         self.bid_history += [(self.p1._bid, self.p2._bid, bid_winner)]
