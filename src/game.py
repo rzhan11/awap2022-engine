@@ -104,28 +104,32 @@ class MapInfo():
 
 
 import importlib.util
+import sys
 def import_file(module_name, file_path):
     print("Loading", module_name, file_path)
     spec = importlib.util.spec_from_file_location(module_name, file_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    sys.modules[module_name] = module
     return module
 
 '''
-Class for timeout interruptions of turns - re-implement later
+Class for timeout interruptions of turns - SIGINT non functional on Windows
 '''
-class TimeoutException(Exception): pass
+if os.name != 'nt':
+    class TimeoutException(Exception): pass
 
-@contextmanager
-def time_limit(seconds):
-    def signal_handler(signum, frame):
-        raise TimeoutException("Timed out!")
-    signal.signal(signal.SIGALRM, signal_handler)
-    signal.alarm(seconds)
-    try:
-        yield
-    finally:
-        signal.alarm(0)
+    @contextmanager
+    def time_limit(seconds):
+        def signal_handler(signum, frame):
+            raise TimeoutException("Timed out!")
+        signal.signal(signal.SIGALRM, signal_handler)
+        signal.setitimer(signal.ITIMER_REAL, seconds)
+        # signal.alarm(seconds)
+        try:
+            yield
+        finally:
+            signal.alarm(0)
 
 
 '''
@@ -182,6 +186,7 @@ class Game:
         self.frame_changes = []
         self.money_history = []
         self.utility_history = []
+        self.time_bank_history = []
         self.bid_history = []
 
 
@@ -360,6 +365,7 @@ class Game:
         # save initial copy of money/utility history
         self.money_history += [(self.p1_state.money, self.p2_state.money)]
         self.utility_history += [(self.p1_state.utility, self.p2_state.utility)]
+        self.time_bank_history += [(self.p1_state.time_bank, self.p2_state.time_bank)]
         self.bid_history += [(0, 0, -1)]
 
         for turn_num in range(GC.NUM_ROUNDS):
@@ -409,51 +415,47 @@ class Game:
 
     self.utility_history = list of utility (points) for each player
         format: [(round_0_p1_utility, round_0_p2_utility), ...]
+    
+    self.time_bank_history = list of time banks (seconds) for each player
+            format: [(round_0_p1_time_bank, round_0_p2_time_bank), ...]
 
     -----
     Important note: when giving data to players, make a copy before giving to players, so they do not modify the actual game state
     '''
     def play_turn(self, turn_num):
-
         self.turn = turn_num
 
         # get player turns
         for p in [{"player":self.p1, "state":self.p1_state},
                 {"player":self.p2, "state":self.p2_state}]:
+            limit = GC.TURN_TIME_LIMIT
+            if not p["state"].active and turn_num - p["state"].paused_at + 1 >= GC.TIMEOUT:
+                limit *= GC.TIMEOUT
+                p["state"].active = True
+                print(f"[TIMEOUT END] {self.p1_state.team} resumes turns.")
+
             if p["state"].active:
                 # reset build + bid
                 p["player"]._bid = 0
                 p["player"]._to_build = []
 
                 # play turn
-
-                # temporary time handler, replace with signal handler later
-                # t0 = time.time()
-                # p["player"].play_turn(turn_num, self.map_copy(), p["state"])
-                # tp = time.time()
-                # elapsed = tp - t0
-                # p["state"].time_bank -= elapsed
-                # if p["state"].time_bank <= 0:
-                #     print(f"Your turn timed out; you've used more than your total alotted {GC.TIME_BANK} seconds.")
-                #     p["state"].active = False
-                # elif elapsed > GC.MAX_TURN_TIME:
-                #     print(f"oof - turn {turn_num} took {round(elapsed,3)} seconds. You have {round(p['state'].time_bank,3)} total seconds left to use across 250 rounds.")
-
                 try:
-                    t0 = time.time()
-                    with time_limit(int(p["state"].time_bank)):
+                    if os.name == "nt": # Windows
+                        t0 = time.time()
                         p["player"].play_turn(turn_num, self.map_copy(), p["state"]._copy())
-                    tp = time.time()
-                    elapsed = tp - t0
-                    p["state"].time_bank -= elapsed
-                    if p["state"].time_bank <= 0:
-                        raise TimeoutException()
-                    if elapsed > GC.WARNING_TURN_TIME:
-                        print(f"oof - turn {turn_num} took {round(elapsed,3)} seconds. You have {round(p['state'].time_bank,3)} total seconds left to use across 250 rounds.")
+                        t1 = time.time()
+                        p["state"].time_bank -= (t1 - t0)
+                        if t1 - t0 > limit:
+                            raise TimeoutException
+                    else:
+                        with time_limit(limit):
+                            p["player"].play_turn(turn_num, self.map_copy(), p["state"]._copy())
+                        p["state"].time_bank -= limit
                 except TimeoutException as _:
-                    print(f"Your turn timed out; you've used more than your total alotted {GC.TIME_BANK} seconds.")
+                    print(f"[{GC.TIMEOUT} ROUND TIMEOUT START] You used >{limit} seconds in a turn.")
+                    p["state"].paused_at = turn_num
                     p["state"].active = False
-
 
         # update game state based on player actions
         # give build priority based on bid
@@ -468,6 +470,9 @@ class Game:
             bid_winner = 1
             p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
             p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
+
+        # update time bank history
+        self.time_bank_history += [(self.p1_state.time_bank, self.p2_state.time_bank)]
 
         # update bid history
         self.bid_history += [(self.p1._bid, self.p2._bid, bid_winner)]
@@ -636,6 +641,7 @@ class Game:
                 "frame_changes": self.frame_changes,
                 "money_history": self.money_history,
                 "utility_history": self.utility_history,
+                "time_bank_history": self.time_bank_history,
                 "bid_history": self.bid_history,
                 "structure_type_ids": structure_type_ids,
                 "winner": self.winner

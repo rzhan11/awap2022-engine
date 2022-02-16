@@ -19,5 +19,5 @@ class GameConstants:
 
     TOWER_RADIUS = 2
 
-    WARNING_TURN_TIME = 5 # prints a notice after a turn runs for this long
-    TIME_BANK = 30 # 30 seconds
+    TURN_TIME_LIMIT = 0.24
+    TIMEOUT = 5 # number of rounds skipped for timeout

@@ -86,7 +86,7 @@ class MyPlayer(Player):
             for j in range(-GC.TOWER_RADIUS, GC.TOWER_RADIUS + 1):
                 if i * i + j * j <= GC.TOWER_RADIUS * GC.TOWER_RADIUS:
                     self.dlocs += [(i, j)]
-        print(self.dlocs)
+        # print(self.dlocs)
 
         self.set_bid(turn_num % 2)
 
