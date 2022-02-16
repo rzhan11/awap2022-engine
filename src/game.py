@@ -387,7 +387,7 @@ class Game:
             # everything failed (basically impossible lmao)
             rScore, bScore = 1,0
 
-        self.winner = self.p1_name if rScore > bScore else self.p2_name
+        self.winner = 1 if rScore > bScore else 2
 
     '''
     Runs a single turn of the game
