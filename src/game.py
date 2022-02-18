@@ -167,15 +167,13 @@ class Game:
 
         self.MyPlayer1 = import_file("Player1", p1_path).MyPlayer
         self.MyPlayer2 = import_file("Player2", p2_path).MyPlayer
-        self.PlayerDQ = import_file("PlayerDQ", "./bots/dq_bot.py").MyPlayer
+        # self.PlayerDQ = import_file("PlayerDQ", "./bots/dq_bot.py").MyPlayer
 
         self.p1_state = PlayerInfo(Team.RED)
         self.p2_state = PlayerInfo(Team.BLUE)
 
         for player, state in [(self.MyPlayer1, self.p1_state),(self.MyPlayer2, self.p2_state)]:
             try:
-                if state.dq: # skip if dq'd
-                    continue
                 if os.name == "nt": # Windows
                     t0 = time.time()
                     if state == self.p1_state: self.p1 = player()
@@ -196,9 +194,9 @@ class Game:
                 state.time_bank.windows_warning(GC.INIT_TIME_LIMIT)
                 print(f"[INIT TIMEOUT] {state.team}'s bot used >{GC.INIT_TIME_LIMIT} seconds to initialize; it will not play.")
                 state.dq = True
-                if state == self.p1_state:
-                    self.p1 = self.PlayerDQ()
-                else: self.p2 = self.PlayerDQ()
+                # if state == self.p1_state:
+                #     self.p1 = self.PlayerDQ()
+                # else: self.p2 = self.PlayerDQ()
 
         self.winner = None
 
@@ -454,6 +452,9 @@ class Game:
 
         # get player turns
         for player, state in [(self.p1, self.p1_state),(self.p2, self.p2_state)]:
+            if state.dq: # skip if dq'd
+                continue
+
             # reset build + bid
             player._bid = 0
             player._to_build = []
