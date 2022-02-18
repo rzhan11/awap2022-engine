@@ -164,16 +164,18 @@ class Game:
         # initializes players
         self.p1_name = p1_path
         self.p2_name = p2_path
-        
+
         self.MyPlayer1 = import_file("Player1", p1_path).MyPlayer
         self.MyPlayer2 = import_file("Player2", p2_path).MyPlayer
         self.PlayerDQ = import_file("PlayerDQ", "./bots/dq_bot.py").MyPlayer
-        
+
         self.p1_state = PlayerInfo(Team.RED)
         self.p2_state = PlayerInfo(Team.BLUE)
-        
+
         for player, state in [(self.MyPlayer1, self.p1_state),(self.MyPlayer2, self.p2_state)]:
             try:
+                if state.dq: # skip if dq'd
+                    continue
                 if os.name == "nt": # Windows
                     t0 = time.time()
                     if state == self.p1_state: self.p1 = player()
@@ -197,7 +199,7 @@ class Game:
                 if state == self.p1_state:
                     self.p1 = self.PlayerDQ()
                 else: self.p2 = self.PlayerDQ()
-        
+
         self.winner = None
 
         # initializes map
@@ -440,7 +442,7 @@ class Game:
 
     self.utility_history = list of utility (points) for each player
         format: [(round_0_p1_utility, round_0_p2_utility), ...]
-    
+
     self.time_bank_history = list of time banks (seconds) for each player
             format: [(round_0_p1_time_bank, round_0_p2_time_bank), ...]
 
@@ -456,7 +458,7 @@ class Game:
             player._bid = 0
             player._to_build = []
 
-            # check for timeout end            
+            # check for timeout end
             limit = GC.TURN_TIME_LIMIT
             state.time_bank.set_turn(self.turn)
             if state.newly_active():

@@ -20,5 +20,5 @@ class GameConstants:
     TOWER_RADIUS = 2
 
     INIT_TIME_LIMIT = 5
-    TURN_TIME_LIMIT = 0.24
+    TURN_TIME_LIMIT = 5 # 0.25
     TIMEOUT = 5 # number of rounds skipped for timeout
