@@ -65,13 +65,13 @@ class PlayerInfo:
 
 class Player:
 
-    @abstractmethod
     def __init__(self):
-        pass
+        print("DQ Bot - This bot will not play.")
+        self._bid = -1
 
-    @abstractmethod
     def play_turn(self, turn_num, map, player_info):
-        pass
+        print("Default Bot [disqualified] - turn played.")
+        self._bid = -1
 
     def set_bid(self, bid):
         self._bid = bid
