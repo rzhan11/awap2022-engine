@@ -36,13 +36,13 @@ class StructureType(Enum):
     ROAD = StructureInfo(
         id=1,
         name="Road",
-        cost=10,
+        cost=25,
         can_build=True
     )
     TOWER = StructureInfo(
         id=2,
         name="Tower",
-        cost=250,
+        cost=500,
         can_build=True
     )
     # TRANSFORMER = StructureInfo(
