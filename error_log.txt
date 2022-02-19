@@ -1,0 +1,18 @@
+Error: hi10:26AM -0500 on Feb 19, 2022Error: hi10:29AM -0500 on Feb 19, 2022
+Error: hi
+<traceback object at 0x7fc517a98b88>
+ 
+10:31AM -0500 on Feb 19, 2022
+Error: hi
+
+ 
+10:32AM -0500 on Feb 19, 2022
+Error: hi
+
+ 
+10:34AM -0500 on Feb 19, 2022
+Error: hi
+Traceback (most recent call last):
+  File "cell-towers/run_game.py", line 17, in <module>
+    raise Exception('hi')
+Exception: hi
