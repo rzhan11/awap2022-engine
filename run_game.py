@@ -8,8 +8,8 @@ from src.game import *
 from src.custom_json import *
 from src.game_constants import GameConstants as GC
 
-dir_path = "./"
-#dir_path = "./cell-towers"
+# dir_path = "./"
+dir_path = "./cell-towers"
 
 if __name__ == "__main__":
 
