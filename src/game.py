@@ -167,8 +167,7 @@ class Game:
 
         self.MyPlayer1 = import_file("Player1", p1_path).MyPlayer
         self.MyPlayer2 = import_file("Player2", p2_path).MyPlayer
-        # self.PlayerDQ = import_file("PlayerDQ", "./bots/dq_bot.py").MyPlayer
-
+        
         self.p1_state = PlayerInfo(Team.RED)
         self.p2_state = PlayerInfo(Team.BLUE)
 
@@ -179,24 +178,16 @@ class Game:
                     if state == self.p1_state: self.p1 = player()
                     else: self.p2 = player()
                     t1 = time.time()
-                    penalty = t1 - t0
-                    state.time_bank.time_left -= penalty
                     if t1 - t0 > GC.INIT_TIME_LIMIT:
                         raise TimeoutException
                 else:
                     with time_limit(GC.INIT_TIME_LIMIT):
                         if state == self.p1_state: self.p1 = player()
                         else: self.p2 = player()
-                    state.time_bank.time_left -= GC.INIT_TIME_LIMIT
-                    penalty = GC.INIT_TIME_LIMIT
-                state.time_bank.time_left -= penalty
             except TimeoutException as _:
-                state.time_bank.windows_warning(GC.INIT_TIME_LIMIT)
+                state.time_bank.windows_warning()
                 print(f"[INIT TIMEOUT] {state.team}'s bot used >{GC.INIT_TIME_LIMIT} seconds to initialize; it will not play.")
                 state.dq = True
-                # if state == self.p1_state:
-                #     self.p1 = self.PlayerDQ()
-                # else: self.p2 = self.PlayerDQ()
 
         self.winner = None
 
@@ -212,6 +203,8 @@ class Game:
         self.money_history = []
         self.utility_history = []
         self.time_bank_history = []
+        self.prev_time_history = []
+        self.active_history = []
         self.bid_history = []
 
 
@@ -421,6 +414,24 @@ class Game:
         self.winner = 1 if rScore > bScore else 2
 
     '''
+    Compute the starting player for each round
+    1. Alternates build priority (if two players try to build on the same tile)
+    '''
+    def starting_team(self, turn_num):
+        redDQ = self.p1_state.dq
+        blueDQ = self.p2_state.dq
+        if redDQ:
+            if blueDQ:
+                return Team.NEUTRAL
+            return Team.BLUE
+        else:
+            if blueDQ: return Team.RED
+            if self.p1._bid > self.p2._bid or self.p1._bid == self.p2._bid and turn_num % 2 == 0:
+                return Team.RED
+            else:
+                return Team.BLUE
+
+    '''
     Runs a single turn of the game
     ---
     1. Checks which towers are connected to generators
@@ -451,19 +462,28 @@ class Game:
         self.turn = turn_num
 
         # get player turns
-        for player, state in [(self.p1, self.p1_state),(self.p2, self.p2_state)]:
-            if state.dq: # skip if dq'd
-                continue
-
+        prev_time = []
+        players = []
+        if self.p1_state.dq:
+            prev_time.append(None)
+            print(f"{self.p1_state.team} turn skipped - DQ'ed")
+        else:
+            players.append((self.p1, self.p1_state))
+        if self.p2_state.dq:
+            prev_time.append(None)
+            print(f"{self.p2_state.team} turn skipped - DQ'ed")
+        else:
+            players.append((self.p2, self.p2_state))
+        
+        for player, state in players:
             # reset build + bid
             player._bid = 0
             player._to_build = []
 
             # check for timeout end
-            limit = GC.TURN_TIME_LIMIT
             state.time_bank.set_turn(self.turn)
+            state.time_bank.time_left += GC.TIME_INC
             if state.newly_active():
-                limit *= GC.TIMEOUT
                 print(f"[TIMEOUT END] {self.p1_state.team} resumes turns.")
             if state.active():
                 # play turn
@@ -473,41 +493,50 @@ class Game:
                         player.play_turn(turn_num, self.map_copy(),state._copy())
                         t1 = time.time()
                         penalty = t1 - t0
-                        if t1 - t0 > limit:
+                        if penalty > limit:
                             raise TimeoutException
                     else:
-                        with time_limit(limit):
+                        t0 = time.time()
+                        with time_limit(state.time_bank.time_left):
                             player.play_turn(turn_num, self.map_copy(),state._copy())
-                        penalty = limit
+                        t1 = time.time()
+                        penalty = t1 - t0
                     state.time_bank.time_left -= penalty
+                    prev_time.append(penalty)
                 except TimeoutException as _:
-                    state.time_bank.windows_warning(limit)
-                    print(f"[{GC.TIMEOUT} ROUND TIMEOUT START] {state.team} used >{limit} seconds in a turn.")
+                    state.time_bank.windows_warning()
+                    print(f"[{GC.TIMEOUT} ROUND TIMEOUT START] {state.team} emptied their time bank.")
                     state.time_bank.paused_at = turn_num
             else:
-                if state.dq:
-                    print(f"{state.team} turn skipped - DQ'ed")
-                else:
-                    print(f"{state.team} turn skipped - in timeout")
+                print(f"{state.team} turn skipped - in timeout")
         # update game state based on player actions
         # give build priority based on bid
-        print(f'Round {turn_num} Bids: R : {self.p1._bid}, B : {self.p2._bid} - ', end='')
-        if self.p1._bid > self.p2._bid or self.p1._bid == self.p2._bid and turn_num % 2 == 0: # alternate build priority (if two players try to build on the same tile)
-            print(f"RED starts")
-            bid_winner = 0
-            p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
-            p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
-        else:
-            print(f"BLUE starts")
-            bid_winner = 1
-            p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
-            p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
+        p1Bid, p2Bid = None, None
+        if not self.p1_state.dq:
+            p1Bid = self.p1._bid
+        if not self.p2_state.dq:
+            p2Bid = self.p2._bid
+        print(f'Round {turn_num} Bids: R : {p1Bid}, B : {p2Bid} - ', end='')
+        bid_winner = self.starting_team(turn_num)
+        if bid_winner != Team.NEUTRAL:
+            if bid_winner == Team.RED:
+                print(f"RED starts")
+                bid_winner = 0
+                p1_changes = self.try_builds(self.p1_state, Team.RED)
+                p2_changes = self.try_builds(self.p2_state, Team.BLUE)
+            else:
+                print(f"BLUE starts")
+                bid_winner = 1
+                p2_changes = self.try_builds(self.p2_state, Team.BLUE)
+                p1_changes = self.try_builds(self.p1_state, Team.RED)
 
         # update time bank history
+        self.prev_time_history += [tuple(prev_time)]
+        self.active_history += [(self.p1_state.active(), self.p2_state.active())]
         self.time_bank_history += [(self.p1_state.time_bank.time_left, self.p2_state.time_bank.time_left)]
 
         # update bid history
-        self.bid_history += [(self.p1._bid, self.p2._bid, bid_winner)]
+        self.bid_history += [(p1Bid, p2Bid, bid_winner)]
 
         # update money
         self.update_resources()
@@ -603,7 +632,13 @@ class Game:
     Returns a list of successfully built structures
         Format: [structure1, structure2, ...]
     '''
-    def try_builds(self, builds, p_state, team):
+    def try_builds(self, p_state, team):
+        if p_state.dq:
+            return []
+        if team == Team.RED:
+            builds = self.p1._to_build
+        else:
+            builds = self.p2._to_build
         new_builds = []
         structures = [Structure(struct_type, x, y, team) for (struct_type, x, y) in builds]
         for s in structures:
@@ -674,6 +709,8 @@ class Game:
                 "money_history": self.money_history,
                 "utility_history": self.utility_history,
                 "time_bank_history": self.time_bank_history,
+                "prev_time_history": self.prev_time_history,
+                "active_history": self.active_history,
                 "bid_history": self.bid_history,
                 "structure_type_ids": structure_type_ids,
                 "winner": self.winner

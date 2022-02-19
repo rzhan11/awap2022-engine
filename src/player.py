@@ -9,10 +9,11 @@ from abc import ABC, abstractmethod
 class Team(Enum):
     RED = 0
     BLUE = 1
+    NEUTRAL = 2
 
 class TimeBank:
     def __init__(self, paused_at=None, turn_num=0,
-        time_left=GC.TURN_TIME_LIMIT * GC.NUM_ROUNDS + GC.INIT_TIME_LIMIT):
+        time_left=GC.BASE_TIME):
         self.time_left = time_left
         self.paused_at = paused_at
         self.turn_num = turn_num
@@ -26,9 +27,9 @@ class TimeBank:
     def active(self):
         return self.paused_at == None or self.turn_num - self.paused_at >= GC.TIMEOUT
 
-    def windows_warning(self,limit):
+    def windows_warning(self):
         if os.name == "nt":
-            print(f"[WINDOWS WARNING] Bot just exceeded {limit} seconds on your \
+            print(f"[WINDOWS WARNING] Bot just exceeded a time limit on your \
                 function call. Our server will terminate it early, possibly with \
                 different effects than on your machine.")
     
