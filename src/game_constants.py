@@ -10,10 +10,10 @@ class GameConstants:
     MAX_POP = 10
 
     MIN_PASS = 1
-    MAX_PASS = 100
+    MAX_PASS = 10
 
     PLAYER_STARTING_MONEY = 250
-    PLAYER_BASE_INCOME = 100
+    PLAYER_BASE_INCOME = 50
 
     NUM_ROUNDS = 250
 
