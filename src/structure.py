@@ -42,7 +42,7 @@ class StructureType(Enum):
     TOWER = StructureInfo(
         id=2,
         name="Tower",
-        cost=500,
+        cost=250,
         can_build=True
     )
     # TRANSFORMER = StructureInfo(

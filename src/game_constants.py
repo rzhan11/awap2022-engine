@@ -13,7 +13,7 @@ class GameConstants:
     MAX_PASS = 10
 
     PLAYER_STARTING_MONEY = 250
-    PLAYER_BASE_INCOME = 10
+    PLAYER_BASE_INCOME = 20
 
     NUM_ROUNDS = 250
 
