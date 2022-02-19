@@ -36,7 +36,7 @@ class StructureType(Enum):
     ROAD = StructureInfo(
         id=1,
         name="Road",
-        cost=25,
+        cost=10,
         can_build=True
     )
     TOWER = StructureInfo(
